@@ -1,24 +1,30 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 import FavoriteNovels from "./FavoriteNovels";
 import FollowingList from "./FollowingList";
+import SuggestedUsers from "./SuggestedUsers";
 import { FaArrowLeft } from "react-icons/fa";
-import { getUserId } from "../helpers/utils"; // Import hàm helper
+import { getUserId } from "../helpers/utils";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { id } = useParams(); 
+  const { id } = useParams();
   const { user } = useContext(AuthContext);
+
   const [profileData, setProfileData] = useState(null);
   const [favoriteNovels, setFavoriteNovels] = useState([]);
   const [following, setFollowings] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState("favorites");
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-  // Hàm fetch danh sách tiểu thuyết yêu thích theo ID
+  // Thêm state này để ngăn gọi fetchSuggestedUsers liên tục khi không còn gợi ý
+  const [noMoreSuggestions, setNoMoreSuggestions] = useState(false);
+
   const fetchFavoriteNovelsDetails = async (novelIds) => {
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
@@ -34,7 +40,7 @@ const ProfilePage = () => {
         title: n.name,
         author: n.author,
         description: n.description,
-        categoryID: n.categoryID
+        categoryID: n.categoryID,
       };
     });
 
@@ -42,7 +48,6 @@ const ProfilePage = () => {
     return novels;
   };
 
-  // Hàm fetch danh sách user follow
   const fetchFollowingUsers = async (followedUserIds) => {
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
@@ -64,30 +69,63 @@ const ProfilePage = () => {
     return users;
   };
 
+  const fetchSuggestedUsers = useCallback(async () => {
+    try {
+      setLoadingSuggestions(true);
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+      const currentUserId = getUserId(user);
+
+      const response = await axios.get(`http://localhost:5000/api/User/GetUsers`, { headers });
+      let allUsers = response.data;
+
+      const followedUserIds = following.map((f) => f.id);
+
+      // Lọc bỏ chính user hiện tại và những user đã follow
+      allUsers = allUsers.filter(
+        (u) => u.userID !== currentUserId && !followedUserIds.includes(u.userID)
+      );
+
+      const suggestions = allUsers.map((u) => ({
+        id: u.userID,
+        username: u.username,
+        email: u.email
+      }));
+
+      setSuggestedUsers(suggestions);
+      setLoadingSuggestions(false);
+
+      // Nếu không có suggestion nào, đánh dấu noMoreSuggestions để không gọi lại
+      if (suggestions.length === 0) {
+        setNoMoreSuggestions(true);
+      }
+    } catch (error) {
+      console.error("Error fetching suggested users:", error);
+      setLoadingSuggestions(false);
+    }
+  }, [user, following]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         const headers = { Authorization: `Bearer ${token}` };
 
-        const userId = id || getUserId(user); // Sử dụng hàm helper để lấy userId
-
-        // Kiểm tra nếu userId không hợp lệ
+        const userId = id || getUserId(user);
         if (!userId || userId === 0) {
           console.error("Invalid user ID:", userId);
           setProfileData(null);
           return;
         }
 
-        // Lấy thông tin user
         const userResponse = await axios.get(
           `http://localhost:5000/api/User/GetUserById/${userId}`,
           { headers }
         );
         setProfileData(userResponse.data);
 
-        // Nếu đang xem user khác, kiểm tra trạng thái follow
         if (id) {
+          // Đang xem user khác
           const followingResponse = await axios.get(
             `http://localhost:5000/api/User/${getUserId(user)}/followed-users`,
             { headers }
@@ -96,22 +134,18 @@ const ProfilePage = () => {
             (follow) => follow.followedUserID === parseInt(id)
           );
           setIsFollowing(isUserFollowing);
-        }
-
-        // Chỉ fetch favorite novels khi đang xem profile chính
-        if (!id) {
-          // Lấy danh sách ID tiểu thuyết yêu thích
+        } else {
+          // Profile chính
           const favoriteResponse = await axios.get(
             `http://localhost:5000/api/User/${userId}/favorite-novels`,
             { headers }
           );
-          const favoriteNovelIds = favoriteResponse.data; // Mảng ID [3,2,1,...]
-
-          // Lấy chi tiết tiểu thuyết từ ID
-          const favoriteNovelsData = await fetchFavoriteNovelsDetails(favoriteNovelIds);
+          const favoriteNovelIds = favoriteResponse.data;
+          const favoriteNovelsData = await fetchFavoriteNovelsDetails(
+            favoriteNovelIds
+          );
           setFavoriteNovels(favoriteNovelsData);
 
-          // Lấy danh sách user follow (chỉ khi profile chính)
           const followedResponse = await axios.get(
             `http://localhost:5000/api/User/${userId}/followed-users`,
             { headers }
@@ -128,11 +162,24 @@ const ProfilePage = () => {
       }
     };
 
-    // Chỉ gọi fetchData nếu user đã được xác thực và có thông tin
     if (user) {
       fetchData();
     }
-  }, [id, user]); // Sử dụng user trong dependencies
+  }, [id, user]);
+
+  // Chỉ gọi fetchSuggestedUsers nếu chưa noMoreSuggestions
+  useEffect(() => {
+    if (
+      activeTab === "suggestions" &&
+      user &&
+      !id &&
+      suggestedUsers.length === 0 &&
+      !loadingSuggestions &&
+      !noMoreSuggestions
+    ) {
+      fetchSuggestedUsers();
+    }
+  }, [activeTab, user, id, suggestedUsers.length, loadingSuggestions, noMoreSuggestions, fetchSuggestedUsers]);
 
   const handleFollowToggle = async () => {
     try {
@@ -151,26 +198,74 @@ const ProfilePage = () => {
           { headers }
         );
         setIsFollowing(false);
+
+        // Cập nhật danh sách following tại chỗ
+        setFollowings((prev) => prev.filter((usr) => usr.id !== parseInt(id)));
       } else {
         await axios.post(
-          `http://localhost:5000/api/User/${currentUserId}/follow-user/${id}`,
+          `http://localhost:5000/api/User/follow-user?userId=${currentUserId}&followUserId=${id}`,
           {},
           { headers }
         );
         setIsFollowing(true);
+
+        // Thêm user vừa follow vào danh sách following (nếu biết thông tin user)
+        // Nếu profileData đã có user đó, sử dụng profileData để thêm vào following
+        if (profileData) {
+          setFollowings((prev) => [
+            ...prev,
+            { id: parseInt(id), username: profileData.username, email: profileData.email }
+          ]);
+        }
       }
     } catch (error) {
       console.error("Error toggling follow status:", error);
     }
   };
 
+  const handleFollowSuggestedUser = async (suggestedUserId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+      const currentUserId = getUserId(user);
+
+      await axios.post(
+        `http://localhost:5000/api/User/follow-user?userId=${currentUserId}&followUserId=${suggestedUserId}`,
+        {},
+        { headers }
+      );
+
+      // Tìm user được follow trong danh sách suggested
+      const userToFollow = suggestedUsers.find((u) => u.id === suggestedUserId);
+      if (userToFollow) {
+        // Thêm user đó vào following ngay lập tức
+        setFollowings((prev) => [...prev, userToFollow]);
+      }
+
+      // Xóa user vừa follow khỏi suggestedUsers
+      setSuggestedUsers((prev) => prev.filter((u) => u.id !== suggestedUserId));
+
+      // Nếu sau khi xóa user này xong mà suggestedUsers trống, không nhất thiết fetch lại
+      // noMoreSuggestions sẽ set nếu fetch trả về rỗng
+      // Nếu bạn muốn sau khi follow hết user vẫn fetch 1 lần để đảm bảo không còn user,
+      // bạn có thể để logic như cũ. Tuy nhiên hiện tại noMoreSuggestions sẽ ngăn fetch lại.
+      if (suggestedUsers.length === 1) {
+        // Vừa xóa xong user cuối cùng, set noMoreSuggestions = true để không fetch thêm
+        setNoMoreSuggestions(true);
+      }
+    } catch (error) {
+      console.error("Error following suggested user:", error);
+    }
+  };
+
   if (!profileData) {
-    return <div className="text-center mt-20 text-red-500">Failed to load profile data.</div>;
+    return (
+      <div className="text-center mt-20 text-red-500">
+        Failed to load profile data.
+      </div>
+    );
   }
 
-  // Điều kiện hiển thị nút Back:
-  // - Nếu đang ở user khác (id có giá trị)
-  // - Hoặc nếu location.state?.fromUpdate là true (nếu bạn muốn dùng tính năng này)
   const showBackButton = id || location.state?.fromUpdate;
 
   return (
@@ -178,7 +273,6 @@ const ProfilePage = () => {
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="pt-20 pb-8 px-8">
-            {/* Nút Back chỉ hiển thị khi đang xem user khác hoặc từ trang UpdateProfile */}
             {showBackButton && (
               <button
                 onClick={() => navigate("/profile")}
@@ -223,7 +317,6 @@ const ProfilePage = () => {
 
             <div className="border-b border-gray-200">
               <nav className="flex gap-8">
-                {/* Chỉ hiển thị tab "Favorite Novels" và "Followings" khi không xem trang người dùng khác */}
                 {!id && (
                   <button
                     onClick={() => setActiveTab("favorites")}
@@ -248,21 +341,38 @@ const ProfilePage = () => {
                     Followings ({following.length})
                   </button>
                 )}
+                {!id && (
+                  <button
+                    onClick={() => setActiveTab("suggestions")}
+                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${
+                      activeTab === "suggestions"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    People You May Know
+                  </button>
+                )}
               </nav>
             </div>
 
             <div className="pt-6">
-              {/* Hiển thị nội dung tab */}
               {!id && activeTab === "favorites" && (
                 <FavoriteNovels novels={favoriteNovels} />
               )}
               {!id && activeTab === "following" && (
                 <FollowingList following={following} />
               )}
-              {/* Nếu đang xem trang người dùng khác, không hiển thị gì hoặc thêm nội dung khác nếu cần */}
+              {!id && activeTab === "suggestions" && (
+                <SuggestedUsers
+                  users={suggestedUsers}
+                  onFollow={handleFollowSuggestedUser}
+                  loading={loadingSuggestions}
+                />
+              )}
               {id && (
                 <div className="text-center text-gray-500">
-                  You cannot access this user's favorite novels and followings.
+                  You cannot access this user's additional tabs.
                 </div>
               )}
             </div>

@@ -9,13 +9,14 @@ const FollowingList = ({ following }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {following.map((follower) => (
+      {following.map((following) => (
         <div
-          key={follower.id}
+          key={following.id}
           className="p-4 bg-white rounded-lg shadow-sm cursor-pointer hover:bg-gray-100 transition"
-          onClick={() => navigate(`/user/${follower.id}`)} // Điều hướng tới UserProfilePage
+          onClick={() => navigate(`/user/${following.id}`)} // Điều hướng tới UserProfilePage
         >
-          <h3>{follower.username}</h3>
+          <h3>{following.username}</h3>
+          <p className="text-sm text-gray-500">{following.email}</p>
         </div>
       ))}
     </div>
