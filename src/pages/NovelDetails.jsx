@@ -11,6 +11,8 @@ const NovelDetails = () => {
   const [novel, setNovel] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false); // Trạng thái favorite
   const [loading, setLoading] = useState(true); // Trạng thái tải dữ liệu
+  const [comments, setComments] = useState([]); // Thêm state lưu trữ danh sách comment
+  const [newComment, setNewComment] = useState(""); // Thêm state cho comment mới
 
   useEffect(() => {
     const fetchNovelDetails = async () => {
@@ -32,6 +34,7 @@ const NovelDetails = () => {
           categoryID: n.categoryID,
         };
         setNovel(mappedNovel);
+        // console.log(mappedNovel);
 
         // Kiểm tra novel này có trong danh sách favorite không
         const favoriteResponse = await axios.get(
@@ -40,6 +43,23 @@ const NovelDetails = () => {
         );
         const favoriteNovelIds = favoriteResponse.data; // Giả sử trả về mảng ID [3,2,1,...]
         setIsFavorite(favoriteNovelIds.includes(parseInt(id)));
+        // console.log(favoriteNovelIds);
+
+        // Lấy danh sách comment
+        const commentResponse = await axios.get(
+          `http://localhost:5000/api/Comment/${id}`,
+          { headers }
+        );
+        // Ánh xạ dữ liệu comment
+        const commentsData = commentResponse.data;
+        const mappedComments = commentsData.map((comment) => ({
+          commentID: comment.commentID,
+          content: comment.content,
+          createdDate: comment.createdDate,
+          userName: comment.userName || "Anonymous", // Nếu userName không có, gán "Anonymous"
+        }));
+        setComments(mappedComments);
+        console.log("Mapped Comments:", mappedComments);
 
         setLoading(false);
       } catch (error) {
@@ -50,6 +70,58 @@ const NovelDetails = () => {
 
     fetchNovelDetails();
   }, [id, user.userId]);
+
+  // Hàm thêm comment
+  const handlePostComment = async () => {
+    if (!newComment.trim()) return; // Không gửi comment rỗng
+
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Gửi comment mới đến backend, bao gồm tên người dùng
+      const payload = {
+        novelID: id,
+        userID: user.userId,
+        userName: user.username,  // Gửi tên người dùng
+        content: newComment,
+      };
+
+      console.log("Payload:", payload.userName);
+      const response = await axios.post(
+        `http://localhost:5000/api/Comment`,
+        payload,
+        { headers }
+      );
+
+      // Kiểm tra xem comment từ backend có chứa đúng UserName không
+      console.log("Response from backend:", response.data);
+
+      // Cập nhật danh sách comment sau khi gửi thành công
+      setComments(prevComments => [response.data, ...prevComments]);  // Đảm bảo không bị overwrite
+
+      setNewComment(""); // Reset input
+    } catch (error) {
+      console.error("Error posting comment:", error);
+    }
+  };
+
+  //Ham xoa comment
+  const handleDeleteComment = async (commentID) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Gửi yêu cầu xoá comment từ backend
+      await axios.delete(`http://localhost:5000/api/Comment/${commentID}`, { headers });
+
+      // Sau khi xoá thành công, cập nhật lại danh sách comment
+      setComments(comments.filter(comment => comment.commentID !== commentID));
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
+
 
   // Hàm thêm novel vào danh sách favorite
   const handleAddToFavorites = async () => {
@@ -138,6 +210,49 @@ const NovelDetails = () => {
               <FaRegHeart /> Add to Favorites
             </button>
           )}
+
+          {/* Form để gửi comment mới */}
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-4">Add a Comment</h2>
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="w-full p-2 border rounded mb-4"
+              placeholder="Write your comment here..."
+            />
+            <button
+              onClick={handlePostComment}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Post Comment
+            </button>
+          </div>
+
+          {/* Danh sách comment */}
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-4">Comments</h2>
+            {comments && comments.length > 0 ? (
+              comments.map((comment, index) => (
+                <div key={`${comment.commentID}-${index}`} className="mb-4 border-b pb-4">
+                  <p>
+                    <strong>{comment.userName || "Anonymous"}</strong>: {comment.content}
+                  </p>
+                  <small className="text-gray-500">
+                    {new Date(comment.createdDate).toLocaleString()}
+                  </small>
+                  <button
+                    onClick={() => handleDeleteComment(comment.commentID)} // Gọi hàm xoá khi nhấn nút
+                    className="text-red-500 mt-2"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p>No comments yet.</p>
+            )}
+
+          </div>
         </div>
       </div>
     </div>
