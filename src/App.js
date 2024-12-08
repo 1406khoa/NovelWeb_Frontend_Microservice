@@ -8,7 +8,6 @@ import Comment from "./pages/Comment";
 import History from "./pages/History";
 import FavoriteNovels from "./pages/FavoriteNovels";
 import FollowingList from "./pages/FollowingList";
-import Notification from "./pages/Notification";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import ProfilePage from "./pages/ProfilePage";
@@ -57,14 +56,6 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <FollowingList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/notification"
-            element={
-              <ProtectedRoute>
-                <Notification />
               </ProtectedRoute>
             }
           />

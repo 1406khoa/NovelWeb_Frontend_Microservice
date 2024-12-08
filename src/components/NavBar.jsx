@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaBookOpen, FaUser, FaSignOutAlt } from "react-icons/fa";
 import { AuthContext } from "../context/AuthContext";
 import '../styles/navbar.css';
+import NotificationDropdown from "./NotificationDropdown";
+import '../styles/noti-dropdown.css'
 
 const Navbar = () => {
   const { isAuthenticated, logout, user } = useContext(AuthContext); // Lấy thông tin user từ AuthContext
@@ -36,6 +38,8 @@ const Navbar = () => {
             </button>
             {isAuthenticated ? (
               <div className="icon-wrapper">
+                <NotificationDropdown userId={user?.userId} />
+
                 <div className="user-icon">
                   <Link to="/profile" className="hover:text-blue-600 transition-colors">
                     <FaUser className="h-6 w-6" title="User Profile" />
