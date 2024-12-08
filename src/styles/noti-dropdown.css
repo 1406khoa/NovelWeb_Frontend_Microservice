@@ -1,0 +1,115 @@
+/* notification-dropdown.css */
+
+/* Dropdown Container */
+.notification-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 300px;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    z-index: 1000;
+    max-height: 400px;
+    /* Scroll */
+    overflow-y: auto;
+}
+
+/* Dropdown Item */
+.notification-dropdown ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.notification-dropdown li {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.notification-dropdown li:last-child {
+    border-bottom: none;
+}
+
+/* Hover và Đọc/Chưa đọc */
+.notification-dropdown li:hover {
+    background-color: #f3f4f6;
+}
+
+.notification-dropdown li.unread {
+    background-color: #f0f9ff;
+    font-weight: bold;
+}
+
+.notification-dropdown li.read {
+    background-color: white;
+    color: #6b7280;
+}
+
+/* Nút Mark as Read */
+.notification-dropdown button {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #3b82f6;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.notification-dropdown button:hover {
+    text-decoration: underline;
+}
+
+.notification-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notification-dropdown::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.notification-dropdown::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+/* Icon Notification */
+.icon-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.icon-wrapper .relative {
+    position: relative;
+}
+
+.icon-wrapper .relative .absolute {
+    top: -5px;
+    right: -5px;
+    height: 10px;
+    width: 10px;
+    background: #ef4444;
+    border-radius: 50%;
+}
+
+/* Animation */
+.notification-dropdown {
+    animation: dropdownFadeIn 0.2s ease-in-out;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
