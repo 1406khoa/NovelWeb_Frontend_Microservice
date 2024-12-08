@@ -1,40 +1,62 @@
-import React, { useState, useMemo } from "react";
-import NovelCard from "../components/NovelCard";
-import { novels } from "../data/novels";
-import SearchBar from "../components/SearchBar";
-
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "../styles/NovelList.css";
 const NovelList = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [novels, setNovels] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [error, setError] = useState(null);
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-  // Filter novels based on the search query
-  const filteredNovels = useMemo(() => {
-    if (!searchQuery.trim()) return novels;
+  useEffect(() => {
+    // Lấy danh sách thể loại từ API
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/api/Category/getall`);
+        setCategories(response.data);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setError("Unable to fetch categories");
+      }
+    };
 
-    const query = searchQuery.toLowerCase();
-    return novels.filter(
-      (novel) =>
-        novel.title.toLowerCase().includes(query) ||
-        novel.author.toLowerCase().includes(query) ||
-        novel.description.toLowerCase().includes(query)
-    );
-  }, [searchQuery]);
+    // Lấy danh sách tiểu thuyết từ API
+    const fetchNovels = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/api/Novel/getall`);
+        setNovels(response.data);
+      } catch (err) {
+        console.error("Error fetching novels:", err);
+        setError("Unable to fetch novels");
+      }
+    };
+
+    fetchCategories();
+    fetchNovels();
+  }, []);
+
+  // Tìm tên thể loại từ categoryID
+  const getCategoryName = (categoryID) => {
+    const category = categories.find((cat) => cat.categoryID === categoryID);
+    return category ? category.name : "Unknown"; // Nếu không tìm thấy, trả về "Unknown"
+  };
+
+  if (error) return <div>Error: {error}</div>;
+  if (!novels.length || !categories.length) return <div>Loading...</div>;
 
   return (
-    <div className="min-h-screen pt-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">
-            Discover Novels
-          </h1>
-          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+    <div className="novel-container">
+      <h1 >Novel List</h1>
+      <div className="novel-box">
+      {novels.map((novel) => (
+        <div key={novel.novelID} className="novel-item">
+          <h3>{novel.name}</h3>
+          <p><strong>Author:</strong> {novel.author}</p>
+          <p><strong>Category:</strong> {getCategoryName(novel.categoryID)}</p> {/* Hiển thị thể loại */}
+          <p><strong>Description:</strong> {novel.description}</p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredNovels.map((novel) => (
-            <NovelCard key={novel.id} novel={novel} />
-          ))}
-        </div>
+      ))}
       </div>
+      
     </div>
   );
 };
