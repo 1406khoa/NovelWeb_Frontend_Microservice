@@ -1,4 +1,5 @@
 import React from "react";
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/NavBar";
 import Home from "./pages/Home";
@@ -26,10 +27,9 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/category" element={<CategoryList />} />
           <Route path="/categories/:id" element={<CategoryDetail />} />
-
-
-
-          {/* Protected Routes */}
+          <Route
+            path="/novels/:id"
+            element={<NovelDetails />}/>
           <Route
             path="/comment"
             element={
@@ -90,16 +90,7 @@ const App = () => {
             }
           />
 
-          <Route
-            path="/novel/:id"
-            element={
-              <ProtectedRoute>
-                <NovelDetails />
-              </ProtectedRoute>
-            }
-          />
-
-
+          
         </Routes>
       </Router>
     </AuthProvider>

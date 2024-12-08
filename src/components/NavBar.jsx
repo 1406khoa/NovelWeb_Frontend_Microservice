@@ -1,33 +1,36 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaBookOpen, FaUser, FaSignOutAlt, FaCaretDown } from "react-icons/fa";
+import { FaBookOpen, FaUser, FaSignOutAlt } from "react-icons/fa";
 import { AuthContext } from "../context/AuthContext";
 import "../styles/navbar.css";
 import axios from "axios";
 
 const Navbar = () => {
-  const { isAuthenticated, logout, user } = useContext(AuthContext);
+  const { isAuthenticated, logout, user } = useContext(AuthContext); // Lấy thông tin user từ AuthContext
   const [categories, setCategories] = useState([]);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const navigate = useNavigate();
-
+  const [isDropdownOpen, setDropdownOpen] = useState(false); // Quản lý trạng thái dropdown
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(`${BACKEND_URL}/api/Category/getall`);
-        setCategories(response.data);
-      } catch (err) {
-        console.error("Error fetching categories:", err);
-      }
-    };
-    fetchCategories();
-  }, []);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  // Fetch categories khi mở dropdown lần đầu
+  const handleDropdownToggle = async () => {
+    setDropdownOpen(!isDropdownOpen);
+    if (!categories.length) {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/api/Category/getall`);
+        const sortedCategories = response.data.sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+        setCategories(sortedCategories);
+      } catch (err) {
+        console.error("Error fetching categories", err);
+      }
+    }
   };
 
   return (
@@ -54,36 +57,28 @@ const Navbar = () => {
             {/* Dropdown for Categories */}
             <div className="relative">
               <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors flex items-center"
+                onClick={handleDropdownToggle}
+                className="px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
               >
-                View Categories Now
-                <FaCaretDown className="ml-2" />
+                View Categories
               </button>
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-48 z-50">
-                  {categories.length > 0 ? (
-                    categories.map((category) => (
-                      <div
-                        key={category.categoryID}
-                        onClick={() => {
-                          navigate(`/categories/${category.categoryID}`);
-                          setDropdownOpen(false);
-                        }}
-                        className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
-                      >
-                        {category.name}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="px-4 py-2 text-gray-500">No Categories</div>
-                  )}
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded shadow-lg w-64 max-h-60 overflow-auto grid grid-cols-2 gap-2 p-4 z-50">
+                  {categories.map((category) => (
+                    <Link
+                      key={category.categoryID}
+                      to={`/categories/${category.categoryID}`}
+                      className="block text-gray-700 hover:text-blue-600 transition-colors"
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
                 </div>
               )}
             </div>
 
             {isAuthenticated ? (
-              <div className="icon-wrapper flex items-center gap-4">
+              <div className="icon-wrapper">
                 <div className="user-icon">
                   <Link to="/profile" className="hover:text-blue-600 transition-colors">
                     <FaUser className="h-6 w-6" title="User Profile" />

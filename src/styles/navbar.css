@@ -17,10 +17,32 @@
     gap: 1rem; /* Điều chỉnh khoảng cách giữa các icon */
   }
   
-.relative .absolute div {
-  padding: 10px 15px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}.relative .absolute div:hover {
-  background-color: #f0f4f8;
+/* Dropdown Items */
+.relative .absolute a {
+  padding: 8px 12px;
+  display: block;
+  text-decoration: none;
+  color: #374151;
+  border-radius: 4px;
+}
+
+.relative .absolute a:hover {
+  background-color: #f3f4f6;
+  color: #1d4ed8;
+}
+
+/* Grid Layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  padding: 8px;
+}
+/* Dropdown Container */
+.relative .absolute {
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: auto; /* Thêm thanh cuộn nếu danh sách quá dài */
 }

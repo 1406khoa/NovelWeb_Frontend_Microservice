@@ -60,7 +60,7 @@ h1 {
   
   /* Định dạng cho button View Details */
   .novel-item button {
-    background-color: #4CAF50;  /* Màu nền xanh lá */
+    background-color: #3498db;  /* Màu nền xanh lá */
     color: white;               /* Màu chữ trắng */
     border: none;               /* Bỏ viền */
     padding: 10px 20px;         /* Padding cho button */
@@ -71,6 +71,21 @@ h1 {
   
   /* Hiệu ứng hover cho button */
   .novel-item button:hover {
-    background-color: #45a049; /* Màu nền button khi hover */
+    background-color: #105a8b; /* Màu nền button khi hover */
   }
+  .view-details-button {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .view-details-button:hover {
+    background-color: #2980b9;
+  }
+  
   
