@@ -34,6 +34,13 @@ const Home = () => {
         >
           View Novels Now
         </button>
+        <button
+          onClick={() => navigate("/category")}
+          className="px-8 py-4 bg-blue-600 text-white rounded-lg text-lg font-semibold hover:bg-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-blue-300/50 "
+          style = {{marginLeft: "20px"}}
+        >
+          View Categories Now
+        </button>
       </div>
     </div>
   );
