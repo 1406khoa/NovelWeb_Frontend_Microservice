@@ -1,78 +1,152 @@
 import React, { useState, useContext } from "react";
 import axios from "axios";
+import { AuthForm } from "../../components/AuthForm";
+import { BookOpen } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
+import Toast from "../../components/Toast";
 
-const Login = () => {
+export function Login() {
+  const [isSignIn, setIsSignIn] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const { login } = useContext(AuthContext);
-
-  const navigate = useNavigate(); // Sử dụng useNavigate thay vì window.location.href
+  const navigate = useNavigate();
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post("http://localhost:5000/api/User/Login", {
-        email,
-        password,
-      });
+    setError("");
 
-      // Lấy dữ liệu từ response
-      const { token, username, email: userEmail, userID } = response.data;
+    if (isSignIn) {
+      // Đăng nhập
+      try {
+        const response = await axios.post("http://localhost:5000/api/User/Login", {
+          email,
+          password,
+        });
+        const { token, username: userName, email: userEmail, userID } = response.data;
+        login(token, { userId: userID, username: userName, email: userEmail });
 
-      // Gọi hàm login trong AuthContext
-      login(token, { userId: userID, username, email: userEmail });
+        setToastMessage("Login successful!");
+        setShowToast(true);
 
-      alert("Login successful!");
-      // Chuyển hướng sang trang chủ mà không tải lại
-      navigate("/");
-    } catch (err) {
-      setError("Invalid email or password.");
+        // Điều hướng sau một khoảng thời gian
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
+      } catch (err) {
+        setError("Invalid email or password.");
+      }
+    } else {
+      // Đăng ký
+      try {
+        await axios.post("http://localhost:5000/api/User/add-user", {
+          username,
+          email,
+          password,
+          role: "User", // Mặc định role là User
+        });
+
+        setToastMessage("Sign up successful! Please sign in.");
+        setShowToast(true);
+
+        // Reset form và chuyển sang tab Sign In
+        setTimeout(() => {
+          setIsSignIn(true);
+          setEmail("");
+          setPassword("");
+          setUsername("");
+        }, 2000);
+
+      } catch (err) {
+        setError("Failed to sign up. Please check your details and try again.");
+      }
     }
   };
-  
-  
-  
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full"
-      >
-        <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
-        {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
-        <div className="mb-4">
-          <label className="block text-gray-700">Email</label>
-          <input
-            type="string"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
+    <div className="min-h-screen pt-16 bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center px-4">
+      <div className="max-w-md w-full">
+        <div className="text-center mb-8">
+          <BookOpen className="h-12 w-12 mx-auto text-blue-600 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900">Welcome to NovelVerse</h2>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
+
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 hover:shadow-xl">
+          {/* Tab Navigation */}
+          <div className="flex relative">
+            <div
+              className="absolute bottom-0 h-0.5 bg-blue-600 transition-all duration-300 ease-out"
+              style={{
+                left: isSignIn ? "0%" : "50%",
+                width: "50%",
+                transform: `translateX(${isSignIn ? '0%' : '0%'})`,
+              }}
+            />
+            <button
+              onClick={() => setIsSignIn(true)}
+              className={`flex-1 py-4 text-center transition-all duration-300 ${isSignIn ? "text-blue-600 font-semibold" : "text-gray-500 hover:text-gray-700"
+                }`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setIsSignIn(false)}
+              className={`flex-1 py-4 text-center ${!isSignIn ? "text-blue-600 font-semibold" : "text-gray-500 hover:text-gray-700"
+                }`}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          {/* Form Container */}
+          <div className="p-8 relative">
+            <div className="relative perspective-1000">
+              <div
+                className={`backface-hidden transition-all duration-500 ease-out ${isSignIn
+                  ? 'animate-flip-in opacity-100 translate-x-0'
+                  : 'animate-flip-out opacity-0 -translate-x-full absolute inset-0'
+                  }`}
+              >
+                <AuthForm
+                  type="signin"
+                  onSubmit={handleSubmit}
+                  email={email}
+                  setEmail={setEmail}
+                  password={password}
+                  setPassword={setPassword}
+                  error={error}
+                />
+              </div>
+              <div
+                className={`backface-hidden transition-all duration-500 ease-out ${!isSignIn
+                  ? 'animate-flip-in opacity-100 translate-x-0'
+                  : 'animate-flip-out opacity-0 translate-x-full absolute inset-0'
+                  }`}
+              >
+                <AuthForm
+                  type="signup"
+                  onSubmit={handleSubmit}
+                  email={email}
+                  setEmail={setEmail}
+                  password={password}
+                  setPassword={setPassword}
+                  username={username}
+                  setUsername={setUsername}
+                  error={error}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
-        >
-          Login
-        </button>
-      </form>
+      </div>
+      {showToast && <Toast message={toastMessage} onClose={() => setShowToast(false)} />}
     </div>
   );
-};
+}
 
 export default Login;
