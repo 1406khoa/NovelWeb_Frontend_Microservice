@@ -1,15 +1,29 @@
-import React, { useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaBookOpen, FaUser, FaSignOutAlt } from "react-icons/fa";
+import { FaBookOpen, FaUser, FaSignOutAlt, FaCaretDown } from "react-icons/fa";
 import { AuthContext } from "../context/AuthContext";
-import '../styles/navbar.css';
-import NotificationDropdown from "./NotificationDropdown";
-import '../styles/noti-dropdown.css'
+import "../styles/navbar.css";
+import axios from "axios";
 
 const Navbar = () => {
-  const { isAuthenticated, logout, user } = useContext(AuthContext); // Lấy thông tin user từ AuthContext
-  console.log("Navbar user:", user); // Kiểm tra user
+  const { isAuthenticated, logout, user } = useContext(AuthContext);
+  const [categories, setCategories] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
+
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/api/Category/getall`);
+        setCategories(response.data);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -36,16 +50,40 @@ const Navbar = () => {
             >
               View Novels Now
             </button>
-            <button
-              onClick={() => navigate("/category")}
-              className="px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              View Categories Now
-            </button>
-            {isAuthenticated ? (
-              <div className="icon-wrapper">
-                <NotificationDropdown userId={user?.userId} />
 
+            {/* Dropdown for Categories */}
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors flex items-center"
+              >
+                View Categories Now
+                <FaCaretDown className="ml-2" />
+              </button>
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-48 z-50">
+                  {categories.length > 0 ? (
+                    categories.map((category) => (
+                      <div
+                        key={category.categoryID}
+                        onClick={() => {
+                          navigate(`/categories/${category.categoryID}`);
+                          setDropdownOpen(false);
+                        }}
+                        className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
+                      >
+                        {category.name}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-gray-500">No Categories</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {isAuthenticated ? (
+              <div className="icon-wrapper flex items-center gap-4">
                 <div className="user-icon">
                   <Link to="/profile" className="hover:text-blue-600 transition-colors">
                     <FaUser className="h-6 w-6" title="User Profile" />
@@ -60,7 +98,6 @@ const Navbar = () => {
                   <FaSignOutAlt className="h-6 w-6" />
                 </button>
               </div>
-
             ) : (
               <button
                 onClick={() => navigate("/login")}
