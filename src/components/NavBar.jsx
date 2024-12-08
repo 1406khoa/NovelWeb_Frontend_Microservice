@@ -34,6 +34,12 @@ const Navbar = () => {
             >
               View Novels Now
             </button>
+            <button
+              onClick={() => navigate("/category")}
+              className="px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              View Categories Now
+            </button>
             {isAuthenticated ? (
               <div className="icon-wrapper">
                 <div className="user-icon">

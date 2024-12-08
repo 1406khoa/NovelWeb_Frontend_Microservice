@@ -14,7 +14,8 @@ import { AuthProvider } from "./context/AuthContext";
 import ProfilePage from "./pages/ProfilePage";
 import UpdateProfilePage from "./pages/UpdateProfilePage";
 import NovelDetails from "./pages/NovelDetails"; // Import NovelDetails
-
+import CategoryList from "./pages/CategoryList"; // Đảm bảo import đúng đường dẫn
+import CategoryDetail from "./pages/CategoryDetail"; // Import CategoryDetail
 const App = () => {
   return (
     <AuthProvider>
@@ -24,6 +25,8 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/novels" element={<NovelList />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/category" element={<CategoryList />} />
+          <Route path="/categories/:id" element={<CategoryDetail />} />
 
 
 
