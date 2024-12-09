@@ -123,3 +123,8 @@ code {
 .animate-shake {
   animation: shake 0.5s ease-in-out;
 }
+
+.user-name{
+  display: flex;
+  float: left;
+}
