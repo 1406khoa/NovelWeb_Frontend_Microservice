@@ -21,9 +21,16 @@ h1 {
 .search-input {
   margin-left: 1300px;
   margin-bottom: 20px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+    display: block;
+    max-width: 300px;
+    margin: 0 0 30px auto;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    outline: none;
+  
 }
   /* Định dạng từng item (novel) */
   .novel-item {
