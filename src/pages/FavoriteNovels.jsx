@@ -12,7 +12,7 @@ const FavoriteNovels = ({ novels }) => {
         <div key={novel.id} className="p-4 bg-white rounded-lg shadow-sm">
           {/* Title clickable */}
           <Link
-            to={`/novel/${novel.id}`}
+            to={`/novels/${novel.id}`}
             className="text-lg font-semibold text-blue-600 hover:underline"
           >
             {novel.title}
