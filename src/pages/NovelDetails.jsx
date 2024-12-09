@@ -204,17 +204,25 @@ const NovelDetails = () => {
 
           {/* List Chapters */}
           <div className="mb-4">
-            <h3 className="text-xl font-semibold mb-2">List of Chapters:</h3>
-            <ul className="list-inside pl-5">
-              {chapters.length > 0 ? (
-                chapters.map((chapter, index) => (
-                  <li key={chapter.chapterID}>Chapter {index + 1}: {chapter.title || `Untitled`}</li>
-                ))
-              ) : (
-                <li>No chapters available</li>
-              )}
-            </ul>
-          </div>
+  <h3 className="text-xl font-semibold mb-2">List of Chapters:</h3>
+  <ul className="list-inside pl-5">
+    {chapters.length > 0 ? (
+      chapters.map((chapter, index) => (
+        <li key={chapter.chapterID}>
+          <button
+            onClick={() => navigate(`/chapter/${chapter.chapterID}`)}
+            className="text-blue-600 hover:underline"
+          >
+            Chapter {index + 1}
+          </button>
+        </li>
+      ))
+    ) : (
+      <li>No chapters available</li>
+    )}
+  </ul>
+</div>
+
 
           {/* Nút Add/Remove Favorites */}
           {isFavorite ? (

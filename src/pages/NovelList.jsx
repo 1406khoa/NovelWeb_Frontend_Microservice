@@ -7,8 +7,9 @@ const NovelList = () => {
   const [novels, setNovels] = useState([]);
   const [categories, setCategories] = useState([]);
   const [chapterCounts, setChapterCounts] = useState({});
+  const [searchTerm, setSearchTerm] = useState(""); // Thêm state cho từ khóa tìm kiếm
   const [error, setError] = useState(null);
-  
+
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
   const navigate = useNavigate(); // Khởi tạo useNavigate
 
@@ -59,14 +60,28 @@ const NovelList = () => {
     return category ? category.name : "Unknown";
   };
 
+  // Lọc danh sách novels dựa trên từ khóa tìm kiếm
+  const filteredNovels = novels.filter((novel) =>
+    novel.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (error) return <div>Error: {error}</div>;
   if (!novels.length || !categories.length) return <div>Loading...</div>;
 
   return (
     <div className="novel-container">
-      <h1>Novel List</h1>
+      <div className="header">
+        <h1>Novel List</h1>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)} // Cập nhật từ khóa tìm kiếm
+          placeholder="Search novels..."
+          className="search-input"
+        />
+      </div>
       <div className="novel-box">
-        {novels.map((novel) => (
+        {filteredNovels.map((novel) => (
           <div key={novel.novelID} className="novel-item">
             <h3>{novel.name}</h3>
             <p><strong>Category:</strong> {getCategoryName(novel.categoryID)}</p>

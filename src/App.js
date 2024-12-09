@@ -16,6 +16,7 @@ import UpdateProfilePage from "./pages/UpdateProfilePage";
 import NovelDetails from "./pages/NovelDetails"; // Import NovelDetails
 import CategoryList from "./pages/CategoryList"; // Đảm bảo import đúng đường dẫn
 import CategoryDetail from "./pages/CategoryDetail"; // Import CategoryDetail
+import ChapterContent from "./pages/ChapterContent";
 const App = () => {
   return (
     <AuthProvider>
@@ -27,6 +28,8 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/category" element={<CategoryList />} />
           <Route path="/categories/:id" element={<CategoryDetail />} />
+          <Route path="/chapter/:chapterId" element={<ChapterContent />} />
+
           <Route
             path="/novels/:id"
             element={<NovelDetails />}/>

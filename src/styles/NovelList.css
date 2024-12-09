@@ -18,6 +18,13 @@ h1 {
   gap: 20px;                    /* Khoảng cách giữa các item */
   padding: 20px;  
 } 
+.search-input {
+  margin-left: 1300px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
   /* Định dạng từng item (novel) */
   .novel-item {
     background-color: #fff;       /* Màu nền trắng */
