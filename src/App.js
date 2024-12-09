@@ -1,4 +1,5 @@
 import React from "react";
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/NavBar";
 import Home from "./pages/Home";
@@ -15,6 +16,7 @@ import UpdateProfilePage from "./pages/UpdateProfilePage";
 import NovelDetails from "./pages/NovelDetails"; // Import NovelDetails
 import CategoryList from "./pages/CategoryList"; // Đảm bảo import đúng đường dẫn
 import CategoryDetail from "./pages/CategoryDetail"; // Import CategoryDetail
+import ChapterContent from "./pages/ChapterContent";
 const App = () => {
   return (
     <AuthProvider>
@@ -26,10 +28,13 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/category" element={<CategoryList />} />
           <Route path="/categories/:id" element={<CategoryDetail />} />
+          <Route path="/chapter/:chapterId" element={<ChapterContent />} />
 
-
-
-          {/* Protected Routes */}
+          <Route
+            path="/novels/:id"
+            element={<NovelDetails />}
+          />
+          
           <Route
             path="/comment"
             element={
@@ -86,15 +91,6 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <UpdateProfilePage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/novel/:id"
-            element={
-              <ProtectedRoute>
-                <NovelDetails />
               </ProtectedRoute>
             }
           />
