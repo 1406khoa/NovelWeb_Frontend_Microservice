@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 import { FaArrowLeft, FaHeart, FaRegHeart } from "react-icons/fa"; // Import các icon cần thiết
+import { Trash } from 'lucide-react';
 
 const NovelDetails = () => {
   const { id } = useParams(); // Lấy id của novel từ URL
@@ -58,12 +59,14 @@ const NovelDetails = () => {
           `http://localhost:5000/api/Comment/${id}`,
           { headers }
         );
+        console.log("Comment Response:", commentResponse.data); // Kiểm tra dữ liệu nhận về từ API
         const commentsData = commentResponse.data;
         const mappedComments = commentsData.map((comment) => ({
           commentID: comment.commentID,
           content: comment.content,
           createdDate: comment.createdDate,
           userName: comment.userName || "Anonymous",
+          userId: comment.userID, // Kiểm tra có trường này hay không
         }));
         setComments(mappedComments);
 
@@ -91,7 +94,7 @@ const NovelDetails = () => {
 
       const payload = {
         novelID: id,
-        userID: user.userId,
+        userID: user.userId, // Sử dụng userID từ thông tin đăng nhập của user
         userName: user.username,
         content: newComment,
       };
@@ -102,28 +105,54 @@ const NovelDetails = () => {
         { headers }
       );
 
-      setComments((prevComments) => [response.data, ...prevComments]);
+      console.log("Response from posting comment:", response); // Kiểm tra dữ liệu trả về
+
+      // Sau khi post thành công, thêm bình luận vào danh sách và đảm bảo có "Delete" cho comment vừa mới thêm
+      setComments((prevComments) => [
+        ...prevComments, // Giữ nguyên các comment cũ
+        {
+          ...response.data,
+          userId: response.data.userID, // Đảm bảo userId là chính xác
+        },
+      ]);      
       setNewComment("");
     } catch (error) {
       console.error("Error posting comment:", error);
     }
   };
 
+
+
   // Hàm xóa comment
   const handleDeleteComment = async (commentID) => {
+    console.log("Deleting comment with ID:", commentID);
+
+    // Kiểm tra nếu commentID hợp lệ
+    if (commentID === undefined || commentID === null || commentID <= 0) {
+      console.error("Invalid comment ID:", commentID);
+      return; // Dừng thực hiện nếu commentID không hợp lệ
+    }
+
     try {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      await axios.delete(`http://localhost:5000/api/Comment/${commentID}`, {
-        headers,
-      });
+      const response = await axios.delete(`http://localhost:5000/api/Comment/${commentID}`, { headers });
 
-      setComments(comments.filter((comment) => comment.commentID !== commentID));
+      if (response.status === 204) {
+        setComments((prevComments) => {
+          const updatedComments = prevComments.filter((comment) => comment.commentID !== commentID);
+          console.log("Updated comments after delete:", updatedComments);
+          return updatedComments;
+        });
+      }
     } catch (error) {
       console.error("Error deleting comment:", error);
     }
   };
+
+
+
 
   // Hàm thêm novel vào danh sách favorite
   const handleAddToFavorites = async () => {
@@ -234,45 +263,55 @@ const NovelDetails = () => {
             </button>
           )}
 
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">Add a Comment</h2>
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="w-full p-2 border rounded mb-4"
-              placeholder="Write your comment here..."
-            />
-            <button
-              onClick={handlePostComment}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Post Comment
-            </button>
-          </div>
 
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">Comments</h2>
-            {comments && comments.length > 0 ? (
-              comments.map((comment, index) => (
-                <div key={`${comment.commentID}-${index}`} className="mb-4 border-b pb-4">
-                  <p>
-                    <strong>{comment.userName || "Anonymous"}</strong>:{" "}
-                    {comment.content}
-                  </p>
-                  <small className="text-gray-500">
-                    {new Date(comment.createdDate).toLocaleString()}
-                  </small>
-                  <button
-                    onClick={() => handleDeleteComment(comment.commentID)}
-                    className="text-red-500 mt-2"
-                  >
-                    Delete
-                  </button>
-                </div>
+<div className="mt-8">
+  <h2 className="text-xl font-semibold mb-4">Comments</h2>
+  {comments && comments.length > 0 ? (
+    comments.map((comment, index) => (  // Sử dụng slice để không thay đổi mảng gốc
+      <div key={`${comment.commentID}-${index}`} className="mb-4 border-b pb-4">
+        <p>
+          <strong>{comment.userName || "Anonymous"}</strong>:{" "}
+          {comment.content}
+        </p>
+        <small className="text-gray-500">
+          {new Date(comment.createdDate).toLocaleString()}
+        </small>
+
+        {/* Debugging: log thông tin user và comment */}
+        {console.log("User ID:", user?.userId, "Comment User ID:", comment.userId)}
+        {console.log("Comment ID:", comment.commentID)} {/* Log commentID ở đây */}
+
+        {/* Chỉ hiển thị nút "Delete" nếu người dùng hiện tại là chủ sở hữu của bình luận */}
+        {user?.userId === comment.userId && (
+          <button
+            onClick={() => handleDeleteComment(comment.commentID)}
+            className="text-red-500 mt-2 h-3 w-3"
+          >
+           <Trash />
+          </button>
+        )}
+      </div>
+
               ))
+
             ) : (
               <p>No comments yet.</p>
             )}
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold mb-4">Add a Comment</h2>
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="w-full p-2 border rounded mb-4"
+                placeholder="Write your comment here..."
+              />
+              <button
+                onClick={handlePostComment}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Post Comment
+              </button>
+            </div>
           </div>
         </div>
       </div>
