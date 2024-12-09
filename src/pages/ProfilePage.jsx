@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import { getUserId } from "../helpers/utils";
 import FavoriteNovels from "./FavoriteNovels";
 import FollowingList from "./FollowingList";
+import History from './History';
 import SuggestedUsers from "./SuggestedUsers";
-import { FaArrowLeft } from "react-icons/fa";
-import { getUserId } from "../helpers/utils";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -296,11 +297,10 @@ const ProfilePage = () => {
               {id && (
                 <button
                   onClick={handleFollowToggle}
-                  className={`px-4 py-2 rounded-lg ${
-                    isFollowing
-                      ? "bg-red-500 text-white hover:bg-red-600"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
+                  className={`px-4 py-2 rounded-lg ${isFollowing
+                    ? "bg-red-500 text-white hover:bg-red-600"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                    }`}
                 >
                   {isFollowing ? "Unfollow" : "Follow"}
                 </button>
@@ -320,11 +320,10 @@ const ProfilePage = () => {
                 {!id && (
                   <button
                     onClick={() => setActiveTab("favorites")}
-                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${
-                      activeTab === "favorites"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
+                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${activeTab === "favorites"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
                   >
                     Favorite Novels ({favoriteNovels.length})
                   </button>
@@ -332,11 +331,10 @@ const ProfilePage = () => {
                 {!id && (
                   <button
                     onClick={() => setActiveTab("following")}
-                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${
-                      activeTab === "following"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
+                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${activeTab === "following"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
                   >
                     Followings ({following.length})
                   </button>
@@ -344,13 +342,23 @@ const ProfilePage = () => {
                 {!id && (
                   <button
                     onClick={() => setActiveTab("suggestions")}
-                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${
-                      activeTab === "suggestions"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
+                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${activeTab === "suggestions"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
                   >
                     People You May Know
+                  </button>
+                )}
+                {!id && (
+                  <button
+                    onClick={() => setActiveTab("history")}
+                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${activeTab === "history"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
+                  >
+                    Reading History
                   </button>
                 )}
               </nav>
@@ -369,6 +377,9 @@ const ProfilePage = () => {
                   onFollow={handleFollowSuggestedUser}
                   loading={loadingSuggestions}
                 />
+              )}
+              {!id && activeTab === "history" && (
+                <History userId={getUserId(user)} /> // Truyền userId từ hàm getUserId
               )}
               {id && (
                 <div className="text-center text-gray-500">
