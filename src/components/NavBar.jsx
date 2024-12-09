@@ -52,7 +52,7 @@ const Navbar = () => {
               onClick={() => navigate("/novels")}
               className="px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
             >
-              View Novels Now
+              Novels
             </button>
 
             {/* Dropdown for Categories */}

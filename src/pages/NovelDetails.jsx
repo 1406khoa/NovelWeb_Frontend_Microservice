@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
+import React, { useContext, useEffect, useState } from "react";
 import { FaArrowLeft, FaHeart, FaRegHeart } from "react-icons/fa"; // Import các icon cần thiết
+import { useNavigate, useParams } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 const NovelDetails = () => {
   const { id } = useParams(); // Lấy id của novel từ URL
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user } = useContext(AuthContext); // Lấy thông tin đăng nhập từ AuthContext
   const [novel, setNovel] = useState(null);
   const [chapters, setChapters] = useState([]); // Trạng thái để lưu chapters
   const [isFavorite, setIsFavorite] = useState(false); // Trạng thái favorite
@@ -19,7 +19,7 @@ const NovelDetails = () => {
     const fetchNovelDetails = async () => {
       try {
         const token = localStorage.getItem("token");
-        const headers = { Authorization: `Bearer ${token}` };
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
         // Lấy chi tiết novel
         const novelResponse = await axios.get(
@@ -35,39 +35,37 @@ const NovelDetails = () => {
           categoryID: n.categoryID,
         };
         setNovel(mappedNovel);
-        // console.log(mappedNovel);
 
         // Lấy danh sách chapters cho novel này
         const chaptersResponse = await axios.get(
           `http://localhost:5000/api/Chapter/Novel/${id}`,
           { headers }
         );
-        setChapters(chaptersResponse.data); // Lưu danh sách chapters
+        setChapters(chaptersResponse.data);
 
-        // Kiểm tra novel này có trong danh sách favorite không
-        const favoriteResponse = await axios.get(
-          `http://localhost:5000/api/User/${user.userId}/favorite-novels`,
-          { headers }
-        );
-        const favoriteNovelIds = favoriteResponse.data; // Giả sử trả về mảng ID [3,2,1,...]
-        setIsFavorite(favoriteNovelIds.includes(parseInt(id)));
-        // console.log(favoriteNovelIds);
+        // Kiểm tra novel này có trong danh sách favorite không (chỉ nếu đã đăng nhập)
+        if (user) {
+          const favoriteResponse = await axios.get(
+            `http://localhost:5000/api/User/${user.userId}/favorite-novels`,
+            { headers }
+          );
+          const favoriteNovelIds = favoriteResponse.data;
+          setIsFavorite(favoriteNovelIds.includes(parseInt(id)));
+        }
 
         // Lấy danh sách comment
         const commentResponse = await axios.get(
           `http://localhost:5000/api/Comment/${id}`,
           { headers }
         );
-        // Ánh xạ dữ liệu comment
         const commentsData = commentResponse.data;
         const mappedComments = commentsData.map((comment) => ({
           commentID: comment.commentID,
           content: comment.content,
           createdDate: comment.createdDate,
-          userName: comment.userName || "Anonymous", // Nếu userName không có, gán "Anonymous"
+          userName: comment.userName || "Anonymous",
         }));
         setComments(mappedComments);
-        console.log("Mapped Comments:", mappedComments);
 
         setLoading(false);
       } catch (error) {
@@ -77,74 +75,72 @@ const NovelDetails = () => {
     };
 
     fetchNovelDetails();
-  }, [id, user.userId]);
+  }, [id, user]);
 
   // Hàm thêm comment
   const handlePostComment = async () => {
-    if (!newComment.trim()) return; // Không gửi comment rỗng
+    if (!user) {
+      alert("You need to log in to post a comment.");
+      return;
+    }
+    if (!newComment.trim()) return;
 
     try {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Gửi comment mới đến backend, bao gồm tên người dùng
       const payload = {
         novelID: id,
         userID: user.userId,
-        userName: user.username,  // Gửi tên người dùng
+        userName: user.username,
         content: newComment,
       };
 
-      console.log("Payload:", payload.userName);
       const response = await axios.post(
         `http://localhost:5000/api/Comment`,
         payload,
         { headers }
       );
 
-      // Kiểm tra xem comment từ backend có chứa đúng UserName không
-      console.log("Response from backend:", response.data);
-
-      // Cập nhật danh sách comment sau khi gửi thành công
-      setComments(prevComments => [response.data, ...prevComments]);  // Đảm bảo không bị overwrite
-
-      setNewComment(""); // Reset input
+      setComments((prevComments) => [response.data, ...prevComments]);
+      setNewComment("");
     } catch (error) {
       console.error("Error posting comment:", error);
     }
   };
 
-  //Ham xoa comment
+  // Hàm xóa comment
   const handleDeleteComment = async (commentID) => {
     try {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Gửi yêu cầu xoá comment từ backend
-      await axios.delete(`http://localhost:5000/api/Comment/${commentID}`, { headers });
+      await axios.delete(`http://localhost:5000/api/Comment/${commentID}`, {
+        headers,
+      });
 
-      // Sau khi xoá thành công, cập nhật lại danh sách comment
-      setComments(comments.filter(comment => comment.commentID !== commentID));
+      setComments(comments.filter((comment) => comment.commentID !== commentID));
     } catch (error) {
       console.error("Error deleting comment:", error);
     }
   };
 
-
   // Hàm thêm novel vào danh sách favorite
   const handleAddToFavorites = async () => {
+    if (!user) {
+      alert("You need to log in to add to favorites.");
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Gọi API thêm novel vào favorite
       await axios.post(
         `http://localhost:5000/api/User/${user.userId}/favorite-novels/${id}`,
         {},
         { headers }
       );
 
-      // Cập nhật trạng thái favorite
       setIsFavorite(true);
     } catch (error) {
       console.error("Error adding novel to favorites:", error);
@@ -153,17 +149,19 @@ const NovelDetails = () => {
 
   // Hàm xóa novel khỏi danh sách favorite
   const handleRemoveFromFavorites = async () => {
+    if (!user) {
+      alert("You need to log in to remove from favorites.");
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Gọi API xóa novel khỏi favorite
       await axios.delete(
         `http://localhost:5000/api/User/${user.userId}/favorite-novels/${id}`,
         { headers }
       );
 
-      // Cập nhật trạng thái favorite
       setIsFavorite(false);
     } catch (error) {
       console.error("Error removing novel from favorites:", error);
@@ -172,7 +170,7 @@ const NovelDetails = () => {
 
   // Hàm quay lại trang profile
   const handleBack = () => {
-    navigate("/novels/"); // Quay lại trang profile
+    navigate(-1);
   };
 
   if (loading) {
@@ -187,7 +185,6 @@ const NovelDetails = () => {
     <div className="min-h-screen pt-24 bg-gray-50">
       <div className="max-w-3xl mx-auto px-4">
         <div className="bg-white rounded-xl shadow-lg p-8">
-          {/* Nút Back */}
           <button
             onClick={handleBack}
             className="flex items-center gap-2 mb-4 text-gray-600 hover:text-blue-600 transition-colors"
@@ -197,34 +194,60 @@ const NovelDetails = () => {
             <span>Back</span>
           </button>
 
-          {/* Thông tin Novel */}
           <h1 className="text-3xl font-bold mb-4">{novel.title}</h1>
           <p className="text-lg text-gray-700 mb-2">Author: {novel.author}</p>
           <p className="text-gray-600 mb-4">{novel.description}</p>
 
-          {/* List Chapters */}
           <div className="mb-4">
-  <h3 className="text-xl font-semibold mb-2">List of Chapters:</h3>
-  <ul className="list-inside pl-5">
-    {chapters.length > 0 ? (
-      chapters.map((chapter, index) => (
-        <li key={chapter.chapterID}>
-          <button
-            onClick={() => navigate(`/chapter/${chapter.chapterID}`)}
-            className="text-blue-600 hover:underline"
-          >
-            Chapter {index + 1}
-          </button>
-        </li>
-      ))
-    ) : (
-      <li>No chapters available</li>
-    )}
-  </ul>
-</div>
+            <h3 className="text-xl font-semibold mb-2">List of Chapters:</h3>
+            <ul className="list-inside pl-5">
+              {chapters.length > 0 ? (
+                chapters.map((chapter, index) => (
+                  <li key={chapter.chapterID}>
+                    <button
+                      onClick={async () => {
+                        if (user) {
+                          try {
+                            const token = localStorage.getItem("token");
+                            const headers = { Authorization: `Bearer ${token}` };
 
+                            // Payload để gửi đến API History
+                            const payload = {
+                              userID: user.userId,
+                              NovelID: parseInt(id),
+                              ChapterID: chapter.chapterID,
+                            };
 
-          {/* Nút Add/Remove Favorites */}
+                            // Gửi yêu cầu POST để lưu lịch sử
+                            await axios.post(
+                              "http://localhost:5000/api/History",
+                              payload,
+                              { headers }
+                            );
+
+                            // Chuyển hướng đến trang chi tiết chapter
+                            navigate(`/chapter/${chapter.chapterID}`);
+                          } catch (error) {
+                            console.error("Failed to save history:", error);
+                            alert("Error saving history. Please try again.");
+                          }
+                        } else {
+                          alert("You need to log in to view this chapter.");
+                        }
+                      }}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Chapter {index + 1}
+                    </button>
+                  </li>
+                ))
+              ) : (
+                <li>No chapters available</li>
+              )}
+            </ul>
+
+          </div>
+
           {isFavorite ? (
             <button
               onClick={handleRemoveFromFavorites}
@@ -241,7 +264,6 @@ const NovelDetails = () => {
             </button>
           )}
 
-          {/* Form để gửi comment mới */}
           <div className="mt-8">
             <h2 className="text-xl font-semibold mb-4">Add a Comment</h2>
             <textarea
@@ -258,20 +280,20 @@ const NovelDetails = () => {
             </button>
           </div>
 
-          {/* Danh sách comment */}
           <div className="mt-8">
             <h2 className="text-xl font-semibold mb-4">Comments</h2>
             {comments && comments.length > 0 ? (
               comments.map((comment, index) => (
                 <div key={`${comment.commentID}-${index}`} className="mb-4 border-b pb-4">
                   <p>
-                    <strong>{comment.userName || "Anonymous"}</strong>: {comment.content}
+                    <strong>{comment.userName || "Anonymous"}</strong>:{" "}
+                    {comment.content}
                   </p>
                   <small className="text-gray-500">
                     {new Date(comment.createdDate).toLocaleString()}
                   </small>
                   <button
-                    onClick={() => handleDeleteComment(comment.commentID)} // Gọi hàm xoá khi nhấn nút
+                    onClick={() => handleDeleteComment(comment.commentID)}
                     className="text-red-500 mt-2"
                   >
                     Delete
@@ -281,7 +303,6 @@ const NovelDetails = () => {
             ) : (
               <p>No comments yet.</p>
             )}
-
           </div>
         </div>
       </div>

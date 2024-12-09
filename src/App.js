@@ -32,7 +32,9 @@ const App = () => {
 
           <Route
             path="/novels/:id"
-            element={<NovelDetails />}/>
+            element={<NovelDetails />}
+          />
+          
           <Route
             path="/comment"
             element={
@@ -93,7 +95,7 @@ const App = () => {
             }
           />
 
-          
+
         </Routes>
       </Router>
     </AuthProvider>

@@ -53,7 +53,7 @@ const NovelList = () => {
     fetchCategories();
     fetchNovels();
     if (novels.length) fetchChapterCounts();
-  }, [novels]);
+  }, [novels, BACKEND_URL]);
 
   const getCategoryName = (categoryID) => {
     const category = categories.find((cat) => cat.categoryID === categoryID);
