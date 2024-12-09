@@ -9,6 +9,7 @@ const NovelDetails = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const [novel, setNovel] = useState(null);
+  const [chapters, setChapters] = useState([]); // Trạng thái để lưu chapters
   const [isFavorite, setIsFavorite] = useState(false); // Trạng thái favorite
   const [loading, setLoading] = useState(true); // Trạng thái tải dữ liệu
   const [comments, setComments] = useState([]); // Thêm state lưu trữ danh sách comment
@@ -35,6 +36,13 @@ const NovelDetails = () => {
         };
         setNovel(mappedNovel);
         // console.log(mappedNovel);
+
+        // Lấy danh sách chapters cho novel này
+        const chaptersResponse = await axios.get(
+          `http://localhost:5000/api/Chapter/Novel/${id}`,
+          { headers }
+        );
+        setChapters(chaptersResponse.data); // Lưu danh sách chapters
 
         // Kiểm tra novel này có trong danh sách favorite không
         const favoriteResponse = await axios.get(
@@ -164,7 +172,7 @@ const NovelDetails = () => {
 
   // Hàm quay lại trang profile
   const handleBack = () => {
-    navigate("/profile"); // Quay lại trang profile
+    navigate(-1); // Quay lại trang profile
   };
 
   if (loading) {
@@ -193,6 +201,28 @@ const NovelDetails = () => {
           <h1 className="text-3xl font-bold mb-4">{novel.title}</h1>
           <p className="text-lg text-gray-700 mb-2">Author: {novel.author}</p>
           <p className="text-gray-600 mb-4">{novel.description}</p>
+
+          {/* List Chapters */}
+          <div className="mb-4">
+  <h3 className="text-xl font-semibold mb-2">List of Chapters:</h3>
+  <ul className="list-inside pl-5">
+    {chapters.length > 0 ? (
+      chapters.map((chapter, index) => (
+        <li key={chapter.chapterID}>
+          <button
+            onClick={() => navigate(`/chapter/${chapter.chapterID}`)}
+            className="text-blue-600 hover:underline"
+          >
+            Chapter {index + 1}
+          </button>
+        </li>
+      ))
+    ) : (
+      <li>No chapters available</li>
+    )}
+  </ul>
+</div>
+
 
           {/* Nút Add/Remove Favorites */}
           {isFavorite ? (

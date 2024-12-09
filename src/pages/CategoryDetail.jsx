@@ -1,24 +1,47 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; // Import useNavigate
 
 const CategoryDetail = () => {
   const { id } = useParams(); // Lấy categoryID từ URL
   const [novels, setNovels] = useState([]);
+  const [chapterCounts, setChapterCounts] = useState({});
   const [error, setError] = useState(null);
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const navigate = useNavigate(); // Khởi tạo useNavigate
 
   useEffect(() => {
     const fetchNovelsByCategory = async () => {
       try {
-        const response = await axios.get(`${BACKEND_URL}/api/Novel/getbycategoryid/${id}`);
+        const response = await axios.get(
+          `${BACKEND_URL}/api/Novel/getbycategoryid/${id}`
+        );
         setNovels(response.data);
       } catch (err) {
+        console.error("Error fetching novels:", err);
         setError("Unable to fetch novels for this category");
       }
     };
+
+    const fetchChapterCounts = async () => {
+      const counts = {};
+      for (const novel of novels) {
+        try {
+          const response = await axios.get(
+            `${BACKEND_URL}/api/Chapter/Novel/${novel.novelID}`
+          );
+          counts[novel.novelID] = response.data.length; // Lấy số lượng chapters
+        } catch (err) {
+          console.error(`Error fetching chapters for novel ${novel.novelID}:`, err);
+          counts[novel.novelID] = 0;
+        }
+      }
+      setChapterCounts(counts);
+    };
+
     fetchNovelsByCategory();
-  }, [id]);
+    if (novels.length) fetchChapterCounts();
+  }, [id, novels]);
 
   if (error) return <div>Error: {error}</div>;
   if (!novels.length) return <div>Loading novels...</div>;
@@ -30,8 +53,17 @@ const CategoryDetail = () => {
         {novels.map((novel) => (
           <div key={novel.novelID} className="novel-item">
             <h3>{novel.name}</h3>
-            <p><strong>Author:</strong> {novel.author}</p>
-            <p><strong>Description:</strong> {novel.description}</p>
+            <p>
+              <strong>Number of Chapters:</strong>{" "}
+              {chapterCounts[novel.novelID] || "Loading..."}
+            </p>
+
+            <button
+              onClick={() => navigate(`/novels/${novel.novelID}`)} // Điều hướng
+              className="view-details-button"
+            >
+              View Details
+            </button>
           </div>
         ))}
       </div>
