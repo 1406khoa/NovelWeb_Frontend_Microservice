@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
+import React, { useContext, useEffect, useState } from "react";
 import { FaArrowLeft, FaHeart, FaRegHeart } from "react-icons/fa"; // Import các icon cần thiết
+import { useNavigate, useParams } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 const NovelDetails = () => {
   const { id } = useParams(); // Lấy id của novel từ URL
@@ -205,7 +205,36 @@ const NovelDetails = () => {
                 chapters.map((chapter, index) => (
                   <li key={chapter.chapterID}>
                     <button
-                      onClick={() => navigate(`/chapter/${chapter.chapterID}`)}
+                      onClick={async () => {
+                        if (user) {
+                          try {
+                            const token = localStorage.getItem("token");
+                            const headers = { Authorization: `Bearer ${token}` };
+
+                            // Payload để gửi đến API History
+                            const payload = {
+                              userID: user.userId,
+                              NovelID: parseInt(id),
+                              ChapterID: chapter.chapterID,
+                            };
+
+                            // Gửi yêu cầu POST để lưu lịch sử
+                            await axios.post(
+                              "http://localhost:5000/api/History",
+                              payload,
+                              { headers }
+                            );
+
+                            // Chuyển hướng đến trang chi tiết chapter
+                            navigate(`/chapter/${chapter.chapterID}`);
+                          } catch (error) {
+                            console.error("Failed to save history:", error);
+                            alert("Error saving history. Please try again.");
+                          }
+                        } else {
+                          alert("You need to log in to view this chapter.");
+                        }
+                      }}
                       className="text-blue-600 hover:underline"
                     >
                       Chapter {index + 1}
@@ -216,6 +245,7 @@ const NovelDetails = () => {
                 <li>No chapters available</li>
               )}
             </ul>
+
           </div>
 
           {isFavorite ? (

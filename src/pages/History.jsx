@@ -37,6 +37,7 @@ const History = ({ userId }) => {
             novelName: novel.name,
             chapterNumber,
             novelId: novel.novelID,
+            author: novel.author,
           };
         })
       );
@@ -93,23 +94,22 @@ const History = ({ userId }) => {
   return (
     <div>
       <h2 className="text-xl font-bold mb-4">Your Reading History</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {readingHistory.map((item) => (
-          <div
-            key={item.id}
-            className="border border-gray-200 rounded-lg shadow-sm p-4 hover:shadow-lg transition-shadow"
-          >
+          <div key={item.id} className="p-4 bg-white rounded-lg shadow-sm">
+            {/* Title clickable */}
             <Link
-              to={`/novel/${item.novelId}`}
-              className="text-blue-500 font-bold text-lg hover:underline"
+              to={`/novels/${item.novelId}`}
+              className="text-lg font-semibold text-blue-600 hover:underline"
             >
               {item.novelName}
             </Link>
-            <p className="text-gray-600">
-              Chapter Number: {item.chapterNumber || "N/A"}
+            <p className="text-sm text-gray-600">By: {item.author}</p>
+            <p className="text-sm text-gray-600">
+              Chapter: {item.chapterNumber || "N/A"}
             </p>
-            <p className="text-gray-600">
-              Last Read Date: {new Date(item.lastReadDate).toLocaleString()}
+            <p className="text-sm text-gray-600">
+              Last Read: {new Date(item.lastReadDate).toLocaleString()}
             </p>
           </div>
         ))}
