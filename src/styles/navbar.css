@@ -17,3 +17,10 @@
     gap: 1rem; /* Điều chỉnh khoảng cách giữa các icon */
   }
   
+.relative .absolute div {
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}.relative .absolute div:hover {
+  background-color: #f0f4f8;
+}
