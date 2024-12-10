@@ -170,7 +170,7 @@ const NovelDetails = () => {
 
   // Hàm quay lại trang profile
   const handleBack = () => {
-    navigate(-1);
+    navigate("/novels");
   };
 
   if (loading) {
@@ -194,6 +194,8 @@ const NovelDetails = () => {
             <span>Back</span>
           </button>
 
+          {/* Thông tin Novel */}
+          
           <h1 className="text-3xl font-bold mb-4">{novel.title}</h1>
           <p className="text-lg text-gray-700 mb-2">Author: {novel.author}</p>
           <p className="text-gray-600 mb-4">{novel.description}</p>
