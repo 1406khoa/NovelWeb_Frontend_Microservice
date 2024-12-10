@@ -83,6 +83,17 @@ const NovelList = () => {
       <div className="novel-box">
         {filteredNovels.map((novel) => (
           <div key={novel.novelID} className="novel-item">
+            {novel.imageUrl && (
+              <img
+                src={novel.imageUrl}
+                alt={novel.name}
+                style={{
+                  width: "300px",
+                  height: "350px",
+                  marginRight: "15px", // Khoảng cách giữa ảnh và nội dung
+                }}
+              />
+            )}
             <h3>{novel.name}</h3>
             <p><strong>Category:</strong> {getCategoryName(novel.categoryID)}</p>
             <p>
