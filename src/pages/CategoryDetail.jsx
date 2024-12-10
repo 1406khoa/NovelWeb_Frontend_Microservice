@@ -41,7 +41,7 @@ const CategoryDetail = () => {
 
     fetchNovelsByCategory();
     if (novels.length) fetchChapterCounts();
-  }, [id, novels]);
+  }, [id, novels, BACKEND_URL]);
 
   if (error) return <div>Error: {error}</div>;
   if (!novels.length) return <div>Loading novels...</div>;

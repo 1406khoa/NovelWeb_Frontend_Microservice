@@ -20,7 +20,7 @@ const CategoryPage = () => {
       }
     };
     fetchCategories();
-  }, []);
+  }, [BACKEND_URL]);
 
   // Lọc danh sách categories dựa trên từ khóa tìm kiếm
   const filteredCategories = categories.filter((category) =>

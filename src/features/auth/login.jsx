@@ -43,28 +43,39 @@ export function Login() {
       }
     } else {
       // Đăng ký
-      try {
-        await axios.post("http://localhost:5000/api/User/add-user", {
-          username,
-          email,
-          password,
-          role: "User", // Mặc định role là User
-        });
-
-        setToastMessage("Sign up successful! Please sign in.");
-        setShowToast(true);
-
-        // Reset form và chuyển sang tab Sign In
-        setTimeout(() => {
-          setIsSignIn(true);
-          setEmail("");
-          setPassword("");
-          setUsername("");
-        }, 2000);
-
-      } catch (err) {
-        setError("Failed to sign up. Please check your details and try again.");
+    try {
+      // Gọi API lấy danh sách user (hoặc gọi API check email nếu có)
+      const response = await axios.get("http://localhost:5000/api/User/GetUsers");
+      const users = response.data; // giả sử đây là mảng user
+      
+      // Kiểm tra email trùng lặp
+      const emailExists = users.some((user) => user.email === email.trim());
+      if (emailExists) {
+        setError("Email already exists. Please choose another one.");
+        return; // Dừng lại, không gửi request thêm user
       }
+
+      // Nếu email không tồn tại, proceed tạo tài khoản
+      await axios.post("http://localhost:5000/api/User/add-user", {
+        username,
+        email,
+        password,
+        role: "User",
+      });
+
+      setToastMessage("Sign up successful! Please sign in.");
+      setShowToast(true);
+
+      setTimeout(() => {
+        setIsSignIn(true);
+        setEmail("");
+        setPassword("");
+        setUsername("");
+      }, 2000);
+
+    } catch (err) {
+      setError("Failed to sign up. Please check your details and try again.");
+    }
     }
   };
 

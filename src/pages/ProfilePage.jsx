@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
+import React, { useCallback, useContext, useEffect, useState, useRef } from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import { getUserId } from "../helpers/utils";
 import FavoriteNovels from "./FavoriteNovels";
 import FollowingList from "./FollowingList";
+import History from './History';
 import SuggestedUsers from "./SuggestedUsers";
-import { FaArrowLeft } from "react-icons/fa";
-import { getUserId } from "../helpers/utils";
+import { Mail, Edit2, BookOpen, Users, UserPlus, HistoryIcon } from 'lucide-react';
+import '../index.css';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -21,9 +24,24 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("favorites");
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-
-  // Thêm state này để ngăn gọi fetchSuggestedUsers liên tục khi không còn gợi ý
   const [noMoreSuggestions, setNoMoreSuggestions] = useState(false);
+
+  // Tab hiển thị thực tế (để animation mượt mà)
+  const [displayTab, setDisplayTab] = useState(activeTab);
+
+  // Dùng để xác định hướng chuyển tab (lật trang)
+  const TABS_ORDER = ["favorites", "following", "suggestions", "history"];
+  const currentTabIndex = TABS_ORDER.indexOf(displayTab);
+  const newTabIndex = TABS_ORDER.indexOf(activeTab);
+  const isForward = newTabIndex > currentTabIndex;
+
+  // Thêm ref để xác định vị trí của các tab và animate indicator
+  const tabsRef = useRef({});
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
+
+  // Classes cho animation lật trang
+  // Sử dụng rotateY và translateX để mô phỏng hiệu ứng lật
+  const [animationClass, setAnimationClass] = useState('opacity-100 translate-x-0 rotate-y-0');
 
   const fetchFavoriteNovelsDetails = async (novelIds) => {
     const token = localStorage.getItem("token");
@@ -81,7 +99,6 @@ const ProfilePage = () => {
 
       const followedUserIds = following.map((f) => f.id);
 
-      // Lọc bỏ chính user hiện tại và những user đã follow
       allUsers = allUsers.filter(
         (u) => u.userID !== currentUserId && !followedUserIds.includes(u.userID)
       );
@@ -95,7 +112,6 @@ const ProfilePage = () => {
       setSuggestedUsers(suggestions);
       setLoadingSuggestions(false);
 
-      // Nếu không có suggestion nào, đánh dấu noMoreSuggestions để không gọi lại
       if (suggestions.length === 0) {
         setNoMoreSuggestions(true);
       }
@@ -125,7 +141,6 @@ const ProfilePage = () => {
         setProfileData(userResponse.data);
 
         if (id) {
-          // Đang xem user khác
           const followingResponse = await axios.get(
             `http://localhost:5000/api/User/${getUserId(user)}/followed-users`,
             { headers }
@@ -135,7 +150,6 @@ const ProfilePage = () => {
           );
           setIsFollowing(isUserFollowing);
         } else {
-          // Profile chính
           const favoriteResponse = await axios.get(
             `http://localhost:5000/api/User/${userId}/favorite-novels`,
             { headers }
@@ -167,7 +181,6 @@ const ProfilePage = () => {
     }
   }, [id, user]);
 
-  // Chỉ gọi fetchSuggestedUsers nếu chưa noMoreSuggestions
   useEffect(() => {
     if (
       activeTab === "suggestions" &&
@@ -198,8 +211,6 @@ const ProfilePage = () => {
           { headers }
         );
         setIsFollowing(false);
-
-        // Cập nhật danh sách following tại chỗ
         setFollowings((prev) => prev.filter((usr) => usr.id !== parseInt(id)));
       } else {
         await axios.post(
@@ -208,9 +219,6 @@ const ProfilePage = () => {
           { headers }
         );
         setIsFollowing(true);
-
-        // Thêm user vừa follow vào danh sách following (nếu biết thông tin user)
-        // Nếu profileData đã có user đó, sử dụng profileData để thêm vào following
         if (profileData) {
           setFollowings((prev) => [
             ...prev,
@@ -235,28 +243,75 @@ const ProfilePage = () => {
         { headers }
       );
 
-      // Tìm user được follow trong danh sách suggested
       const userToFollow = suggestedUsers.find((u) => u.id === suggestedUserId);
       if (userToFollow) {
-        // Thêm user đó vào following ngay lập tức
         setFollowings((prev) => [...prev, userToFollow]);
       }
 
-      // Xóa user vừa follow khỏi suggestedUsers
       setSuggestedUsers((prev) => prev.filter((u) => u.id !== suggestedUserId));
 
-      // Nếu sau khi xóa user này xong mà suggestedUsers trống, không nhất thiết fetch lại
-      // noMoreSuggestions sẽ set nếu fetch trả về rỗng
-      // Nếu bạn muốn sau khi follow hết user vẫn fetch 1 lần để đảm bảo không còn user,
-      // bạn có thể để logic như cũ. Tuy nhiên hiện tại noMoreSuggestions sẽ ngăn fetch lại.
       if (suggestedUsers.length === 1) {
-        // Vừa xóa xong user cuối cùng, set noMoreSuggestions = true để không fetch thêm
         setNoMoreSuggestions(true);
       }
     } catch (error) {
       console.error("Error following suggested user:", error);
     }
   };
+
+  // Hiệu ứng lật trang khi activeTab thay đổi
+  useEffect(() => {
+    // Xác định hướng chuyển tab (trái -> phải hay phải -> trái)
+    // Nếu isForward = true, di chuyển từ phải sang trái (newTab ở bên phải)
+    // Ngược lại di chuyển từ trái sang phải.
+    
+    // Trước tiên, fade out và xoay nội dung cũ
+    const outClass = isForward
+      ? "opacity-0 -translate-x-[50%] rotate-y-10"
+      : "opacity-0 translate-x-[50%] rotate-y--10";
+
+    const inClass = "opacity-100 translate-x-0 rotate-y-0";
+
+    setAnimationClass(outClass);
+    const timeout = setTimeout(() => {
+      setDisplayTab(activeTab);
+      requestAnimationFrame(() => {
+        setAnimationClass(inClass);
+      });
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [activeTab, isForward]);
+
+  // Animate indicator di chuyển dưới các tab
+  const updateIndicator = (tab) => {
+    const button = tabsRef.current[tab];
+    if (button) {
+      const parent = button.parentElement;
+      if (parent) {
+        const parentLeft = parent.getBoundingClientRect().left;
+        const buttonRect = button.getBoundingClientRect();
+        setIndicatorStyle({
+          left: buttonRect.left - parentLeft,
+          width: buttonRect.width,
+        });
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Khi displayTab (tab thực tế hiển thị) thay đổi, cập nhật indicator
+    // Cũng có thể cập nhật trực tiếp từ activeTab vì displayTab đổi sau animation
+    requestAnimationFrame(() => {
+      updateIndicator(activeTab);
+    });
+    const handleResize = () => {
+      updateIndicator(activeTab);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [activeTab]);
 
   if (!profileData) {
     return (
@@ -272,7 +327,8 @@ const ProfilePage = () => {
     <div className="min-h-screen pt-24 bg-gray-50">
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="pt-20 pb-8 px-8">
+          <div className="h-24 bg-gradient-to-r from-blue-500 to-blue-600" />
+          <div className="pt-10 pb-8 px-8">
             {showBackButton && (
               <button
                 onClick={() => navigate("/profile")}
@@ -283,99 +339,134 @@ const ProfilePage = () => {
                 <span>Back</span>
               </button>
             )}
-
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                <p id="user-name" className="text-2xl font-bold text-gray-900 mb-2">
                   {profileData.username}
-                </h1>
+                </p>
                 <div className="flex items-center gap-2 text-gray-600">
+                  <Mail className="h-4 w-4" />
                   <span>{profileData.email}</span>
                 </div>
               </div>
               {id && (
                 <button
                   onClick={handleFollowToggle}
-                  className={`px-4 py-2 rounded-lg ${
-                    isFollowing
-                      ? "bg-red-500 text-white hover:bg-red-600"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
+                  className={`px-4 py-2 rounded-lg ${isFollowing
+                    ? "bg-red-500 text-white hover:bg-red-600"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                    }`}
                 >
                   {isFollowing ? "Unfollow" : "Follow"}
                 </button>
               )}
               {!id && (
                 <button
-                  onClick={() => navigate("/profile/edit")}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  onClick={() => navigate('/profile/edit')}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
+                  <Edit2 className="h-4 w-4" />
                   Update Information
                 </button>
               )}
             </div>
 
-            <div className="border-b border-gray-200">
-              <nav className="flex gap-8">
+            <div className="border-b border-gray-200 relative">
+              {/* Indicator động */}
+              <div
+                className="absolute bottom-0 h-0.5 bg-blue-500 transition-all duration-300 ease-out"
+                style={{
+                  left: indicatorStyle.left,
+                  width: indicatorStyle.width,
+                }}
+              />
+              <nav className="flex gap-8 relative">
                 {!id && (
                   <button
+                    ref={(el) => el && (tabsRef.current.favorites = el)}
                     onClick={() => setActiveTab("favorites")}
-                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${
-                      activeTab === "favorites"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
+                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${activeTab === "favorites"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
                   >
+                    <BookOpen className="h-5 w-5" />
                     Favorite Novels ({favoriteNovels.length})
                   </button>
                 )}
                 {!id && (
                   <button
+                    ref={(el) => el && (tabsRef.current.following = el)}
                     onClick={() => setActiveTab("following")}
-                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${
-                      activeTab === "following"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
+                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${activeTab === "following"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
                   >
+                    <Users className="h-5 w-5" />
                     Followings ({following.length})
                   </button>
                 )}
                 {!id && (
                   <button
+                    ref={(el) => el && (tabsRef.current.suggestions = el)}
                     onClick={() => setActiveTab("suggestions")}
-                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${
-                      activeTab === "suggestions"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
+                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${activeTab === "suggestions"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
                   >
+                    <UserPlus className="h-5 w-5" />
                     People You May Know
+                  </button>
+                )}
+                {!id && (
+                  <button
+                    ref={(el) => el && (tabsRef.current.history = el)}
+                    onClick={() => setActiveTab("history")}
+                    className={`flex items-center gap-2 px-1 py-4 border-b-2 transition-colors ${activeTab === "history"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
+                  >
+                    <HistoryIcon className="h-4 w-4" />
+                    Reading History
                   </button>
                 )}
               </nav>
             </div>
 
-            <div className="pt-6">
-              {!id && activeTab === "favorites" && (
-                <FavoriteNovels novels={favoriteNovels} />
-              )}
-              {!id && activeTab === "following" && (
-                <FollowingList following={following} />
-              )}
-              {!id && activeTab === "suggestions" && (
-                <SuggestedUsers
-                  users={suggestedUsers}
-                  onFollow={handleFollowSuggestedUser}
-                  loading={loadingSuggestions}
-                />
-              )}
-              {id && (
-                <div className="text-center text-gray-500">
-                  You cannot access this user's additional tabs.
-                </div>
-              )}
+            {/* Container cho phần nội dung, có perspective để 3D rõ hơn */}
+            <div className="pt-6 relative overflow-hidden" style={{ perspective: '1000px' }}>
+              {/* Nội dung tab với animation */}
+              <div
+                className={`transition-all duration-300 ease-in-out transform ${animationClass}`}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {!id && displayTab === "favorites" && (
+                  <FavoriteNovels novels={favoriteNovels} />
+                )}
+                {!id && displayTab === "following" && (
+                  <FollowingList following={following} />
+                )}
+                {!id && displayTab === "suggestions" && (
+                  <SuggestedUsers
+                    users={suggestedUsers}
+                    onFollow={handleFollowSuggestedUser}
+                    loading={loadingSuggestions}
+                  />
+                )}
+                {!id && displayTab === "history" && (
+                  <History userId={getUserId(user)} />
+                )}
+                {id && (
+                  <div className="text-center text-gray-500">
+                    You cannot access this user's additional tabs.
+                  </div>
+                )}
+              </div>
             </div>
+
           </div>
         </div>
       </div>

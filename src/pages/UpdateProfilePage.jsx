@@ -14,6 +14,7 @@ const UpdateProfilePage = () => {
   });
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [errorMsg, setErrorMsg] = useState(""); // Thêm state lưu lỗi
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +32,7 @@ const UpdateProfilePage = () => {
         { headers }
       );
       const updatedUser = updatedUserResponse.data;
-      
+
       // Cập nhật AuthContext
       const newUserData = {
         userId: updatedUser.userID, // Giả sử API trả về userID
@@ -40,6 +41,7 @@ const UpdateProfilePage = () => {
       };
       refreshUser(newUserData);
 
+      setErrorMsg(""); // Xóa lỗi cũ nếu có
       setToastMessage("Profile updated successfully!");
       setShowToast(true);
 
@@ -49,10 +51,11 @@ const UpdateProfilePage = () => {
       }, 2000);
     } catch (error) {
       console.error("Error updating profile:", error);
-      setToastMessage(
-        error.response?.data?.Error || "Failed to update profile. Please try again."
-      );
-      setShowToast(true);
+      // Thay vì dùng toast, ta chuyển sang setErrorMsg
+      const errMessage = error.response?.data?.Error || "Failed to update profile. Please try again.";
+      setToastMessage("");
+      setShowToast(false);
+      setErrorMsg(errMessage); // Hiển thị bằng chữ đỏ
     }
   };
 
@@ -111,6 +114,10 @@ const UpdateProfilePage = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            
+            {errorMsg && (
+              <p className="text-red-500">{errorMsg}</p>
+            )}
 
             <div className="flex gap-4">
               <button
