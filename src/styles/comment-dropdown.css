@@ -1,0 +1,35 @@
+.dropdown-comment button {
+    color: inherit; /* Sử dụng màu được khai báo riêng cho từng nút */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    width: 100%;
+    text-align: left;
+    transition: background-color 0.2s ease, color 0.2s ease; /* Hiệu ứng mượt khi đổi màu */
+  }
+  
+  /* Hover cho tất cả nút */
+  .dropdown-comment button:hover {
+    background-color: #f5f5f5; /* Màu nền khi hover */
+  }
+  
+  /* Riêng nút Edit */
+  .edit-button {
+    color: blue; /* Màu chữ bình thường */
+  }
+  
+  .edit-button:hover {
+    color: darkblue; /* Màu chữ khi hover */
+  }
+  
+  /* Riêng nút Delete */
+  .delete-button {
+    color: red; /* Màu chữ bình thường */
+    margin-top: 0.5rem;
+  }
+  
+  .delete-button:hover {
+    color: darkred; /* Màu chữ khi hover */
+  }
+  

@@ -4,6 +4,7 @@ import { FaArrowLeft, FaHeart, FaRegHeart } from "react-icons/fa"; // Import cá
 import { useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { Trash } from 'lucide-react';
+import '../styles/comment-dropdown.css';
 
 const NovelDetails = () => {
   const { id } = useParams(); // Lấy id của novel từ URL
@@ -15,6 +16,10 @@ const NovelDetails = () => {
   const [loading, setLoading] = useState(true); // Trạng thái tải dữ liệu
   const [comments, setComments] = useState([]); // Thêm state lưu trữ danh sách comment
   const [newComment, setNewComment] = useState(""); // Thêm state cho comment mới
+  const [isEditing, setIsEditing] = useState(null); // Dùng để theo dõi comment nào đang được sửa
+  const [newContent, setNewContent] = useState(""); // Dùng để lưu nội dung mới của comment
+  const [dropdownVisibility, setDropdownVisibility] = useState(null); 
+
 
   useEffect(() => {
     const fetchNovelDetails = async () => {
@@ -114,7 +119,7 @@ const NovelDetails = () => {
           ...response.data,
           userId: response.data.userID, // Đảm bảo userId là chính xác
         },
-      ]);      
+      ]);
       setNewComment("");
     } catch (error) {
       console.error("Error posting comment:", error);
@@ -151,8 +156,58 @@ const NovelDetails = () => {
     }
   };
 
+  //Ham Edit Comment
+  const handleEditComment = (commentID, currentContent) => {
+    setIsEditing(commentID); // Đánh dấu comment đang được chỉnh sửa
+    setNewContent(currentContent); // Lưu nội dung comment hiện tại vào state
+  };
 
+  //Ham Cancel Edit
+  const handleCancelEdit = () => {
+    setIsEditing(null); // Dừng việc chỉnh sửa
+    setNewContent(""); // Reset nội dung nhập
+  };
 
+  //Ham Save Edit
+  const handleSaveEdit = async (commentID) => {
+    if (!newContent.trim()) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const payload = {
+        content: newContent,
+      };
+
+      // Gọi API để cập nhật comment
+      await axios.put(
+        `http://localhost:5000/api/Comment/${commentID}`,
+        payload,
+        { headers }
+      );
+
+      // Cập nhật lại danh sách comment
+      setComments((prevComments) =>
+        prevComments.map((comment) =>
+          comment.commentID === commentID
+            ? { ...comment, content: newContent } // Cập nhật nội dung của comment
+            : comment
+        )
+      );
+
+      // Reset lại state sau khi lưu
+      setIsEditing(null);
+      setNewContent("");
+    } catch (error) {
+      console.error("Error saving edited comment:", error);
+    }
+  };
+
+  //Ham Drop down cho comment
+  const handleToggleDropdown = (commentID) => {
+    setDropdownVisibility(dropdownVisibility === commentID ? null : commentID);
+  };
 
   // Hàm thêm novel vào danh sách favorite
   const handleAddToFavorites = async () => {
@@ -274,8 +329,9 @@ const NovelDetails = () => {
                 <li>No chapters available</li>
               )}
             </ul>
-
           </div>
+
+         
 
           {isFavorite ? (
             <button
@@ -294,37 +350,70 @@ const NovelDetails = () => {
           )}
 
 
-<div className="mt-8">
-  <h2 className="text-xl font-semibold mb-4">Comments</h2>
-  {comments && comments.length > 0 ? (
-    comments.map((comment, index) => (  // Sử dụng slice để không thay đổi mảng gốc
-      <div key={`${comment.commentID}-${index}`} className="mb-4 border-b pb-4">
-        <p>
-          <strong>{comment.userName || "Anonymous"}</strong>:{" "}
-          {comment.content}
-        </p>
-        <small className="text-gray-500">
-          {new Date(comment.createdDate).toLocaleString()}
-        </small>
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-4">Comments</h2>
+            {comments && comments.length > 0 ? (
+              comments.map((comment, index) => (  // Sử dụng slice để không thay đổi mảng gốc
+                <div key={`${comment.commentID}-${index}`} className="mb-4 border-b pb-4">
+                  {isEditing === comment.commentID ? (
+                    <div>
+                      <textarea
+                        value={newContent}
+                        onChange={(e) => setNewContent(e.target.value)}
+                        className="w-full p-2 border"
+                      />
+                      <button
+                        onClick={() => handleSaveEdit(comment.commentID)}
+                        className="bg-blue-500 text-white p-2 mt-2"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="bg-gray-500 text-white p-2 mt-2 ml-2"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p>
+                        <strong>{comment.userName || "Anonymous"}</strong>: {comment.content}
+                      </p>
+                      <small className="text-gray-500">
+                        {new Date(comment.createdDate).toLocaleString()}
+                      </small>
 
-        {/* Debugging: log thông tin user và comment */}
-        {console.log("User ID:", user?.userId, "Comment User ID:", comment.userId)}
-        {console.log("Comment ID:", comment.commentID)} {/* Log commentID ở đây */}
-
-        {/* Chỉ hiển thị nút "Delete" nếu người dùng hiện tại là chủ sở hữu của bình luận */}
-        {user?.userId === comment.userId && (
-          <button
-            onClick={() => handleDeleteComment(comment.commentID)}
-            className="text-red-500 mt-2 h-3 w-3"
-          >
-           <Trash />
-          </button>
-        )}
-      </div>
-
+                      {user?.userId === comment.userId && (
+                        <div  className="dropdown-container">
+                          <button onClick={() => handleToggleDropdown(comment.commentID)} className="more-button">
+                            More
+                          </button>
+                          {dropdownVisibility === comment.commentID && (
+                            <div className="dropdown-comment">
+                            <button 
+                              onClick={() => handleEditComment(comment.commentID, comment.content)} 
+                              className="edit-button"
+                            >
+                              Edit
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteComment(comment.commentID)} 
+                              className="delete-button"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               ))
-
             ) : (
+
               <p>No comments yet.</p>
             )}
             <div className="mt-8">
