@@ -49,6 +49,17 @@ const CategoryPage = () => {
       <div className="category-box">
         {filteredCategories.map((category) => (
           <div key={category.categoryID} className="category-item">
+            {category.imageUrl && (
+              <img
+                src={category.imageUrl}
+                alt={category.name}
+                style={{
+                  width: "300px",
+                  height: "350px",
+                  marginRight: "15px", // Khoảng cách giữa ảnh và nội dung
+                }}
+              />
+            )}
             <h3>{category.name}</h3>
             <button onClick={() => handleCategoryClick(category.categoryID)}>
               View Details
