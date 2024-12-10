@@ -382,7 +382,7 @@ const NovelDetails = () => {
                   ) : (
                     <div className="contain-comment">
 
-                      {/* Phan hien content */}
+                    {/* Content */}
                       <div>
                         <p>
                           <strong>{comment.userName || "Anonymous"}</strong>: {comment.content}
@@ -392,7 +392,7 @@ const NovelDetails = () => {
                         </small>
                       </div>
 
-                      {/* Phan edit voi delete */}
+                    {/* Delete va Edit */}
                       <div>
                         {user?.userId === comment.userId && (
                           <div className="dropdown-container">
