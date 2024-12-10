@@ -3,6 +3,10 @@ import React, { useContext, useEffect, useState } from "react";
 import { FaArrowLeft, FaHeart, FaRegHeart } from "react-icons/fa"; // Import các icon cần thiết
 import { useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { Trash } from 'lucide-react';
+import { Ellipsis } from 'lucide-react';
+import { PenLine } from 'lucide-react';
+import '../styles/comment-dropdown.css';
 
 const NovelDetails = () => {
   const { id } = useParams(); // Lấy id của novel từ URL
@@ -14,6 +18,10 @@ const NovelDetails = () => {
   const [loading, setLoading] = useState(true); // Trạng thái tải dữ liệu
   const [comments, setComments] = useState([]); // Thêm state lưu trữ danh sách comment
   const [newComment, setNewComment] = useState(""); // Thêm state cho comment mới
+  const [isEditing, setIsEditing] = useState(null); // Dùng để theo dõi comment nào đang được sửa
+  const [newContent, setNewContent] = useState(""); // Dùng để lưu nội dung mới của comment
+  const [dropdownVisibility, setDropdownVisibility] = useState(null);
+
 
   useEffect(() => {
     const fetchNovelDetails = async () => {
@@ -58,12 +66,14 @@ const NovelDetails = () => {
           `http://localhost:5000/api/Comment/${id}`,
           { headers }
         );
+        console.log("Comment Response:", commentResponse.data); // Kiểm tra dữ liệu nhận về từ API
         const commentsData = commentResponse.data;
         const mappedComments = commentsData.map((comment) => ({
           commentID: comment.commentID,
           content: comment.content,
           createdDate: comment.createdDate,
           userName: comment.userName || "Anonymous",
+          userId: comment.userID, // Kiểm tra có trường này hay không
         }));
         setComments(mappedComments);
 
@@ -91,7 +101,7 @@ const NovelDetails = () => {
 
       const payload = {
         novelID: id,
-        userID: user.userId,
+        userID: user.userId, // Sử dụng userID từ thông tin đăng nhập của user
         userName: user.username,
         content: newComment,
       };
@@ -102,27 +112,103 @@ const NovelDetails = () => {
         { headers }
       );
 
-      setComments((prevComments) => [response.data, ...prevComments]);
+      console.log("Response from posting comment:", response); // Kiểm tra dữ liệu trả về
+
+      // Sau khi post thành công, thêm bình luận vào danh sách và đảm bảo có "Delete" cho comment vừa mới thêm
+      setComments((prevComments) => [
+        ...prevComments, // Giữ nguyên các comment cũ
+        {
+          ...response.data,
+          userId: response.data.userID, // Đảm bảo userId là chính xác
+        },
+      ]);
       setNewComment("");
     } catch (error) {
       console.error("Error posting comment:", error);
     }
   };
 
+
+
   // Hàm xóa comment
   const handleDeleteComment = async (commentID) => {
+    console.log("Deleting comment with ID:", commentID);
+
+    // Kiểm tra nếu commentID hợp lệ
+    if (commentID === undefined || commentID === null || commentID <= 0) {
+      console.error("Invalid comment ID:", commentID);
+      return; // Dừng thực hiện nếu commentID không hợp lệ
+    }
+
     try {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      await axios.delete(`http://localhost:5000/api/Comment/${commentID}`, {
-        headers,
-      });
+      const response = await axios.delete(`http://localhost:5000/api/Comment/${commentID}`, { headers });
 
-      setComments(comments.filter((comment) => comment.commentID !== commentID));
+      if (response.status === 204) {
+        setComments((prevComments) => {
+          const updatedComments = prevComments.filter((comment) => comment.commentID !== commentID);
+          console.log("Updated comments after delete:", updatedComments);
+          return updatedComments;
+        });
+      }
     } catch (error) {
       console.error("Error deleting comment:", error);
     }
+  };
+
+  //Ham Edit Comment
+  const handleEditComment = (commentID, currentContent) => {
+    setIsEditing(commentID); // Đánh dấu comment đang được chỉnh sửa
+    setNewContent(currentContent); // Lưu nội dung comment hiện tại vào state
+  };
+
+  //Ham Cancel Edit
+  const handleCancelEdit = () => {
+    setIsEditing(null); // Dừng việc chỉnh sửa
+    setNewContent(""); // Reset nội dung nhập
+  };
+
+  //Ham Save Edit
+  const handleSaveEdit = async (commentID) => {
+    if (!newContent.trim()) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const payload = {
+        content: newContent,
+      };
+
+      // Gọi API để cập nhật comment
+      await axios.put(
+        `http://localhost:5000/api/Comment/${commentID}`,
+        payload,
+        { headers }
+      );
+
+      // Cập nhật lại danh sách comment
+      setComments((prevComments) =>
+        prevComments.map((comment) =>
+          comment.commentID === commentID
+            ? { ...comment, content: newContent } // Cập nhật nội dung của comment
+            : comment
+        )
+      );
+
+      // Reset lại state sau khi lưu
+      setIsEditing(null);
+      setNewContent("");
+    } catch (error) {
+      console.error("Error saving edited comment:", error);
+    }
+  };
+
+  //Ham Drop down cho comment
+  const handleToggleDropdown = (commentID) => {
+    setDropdownVisibility(dropdownVisibility === commentID ? null : commentID);
   };
 
   // Hàm thêm novel vào danh sách favorite
@@ -195,7 +281,7 @@ const NovelDetails = () => {
           </button>
 
           {/* Thông tin Novel */}
-          
+
           <h1 className="text-3xl font-bold mb-4">{novel.title}</h1>
           <p className="text-lg text-gray-700 mb-2">Author: {novel.author}</p>
           <p className="text-gray-600 mb-4">{novel.description}</p>
@@ -247,8 +333,9 @@ const NovelDetails = () => {
                 <li>No chapters available</li>
               )}
             </ul>
-
           </div>
+
+
 
           {isFavorite ? (
             <button
@@ -266,45 +353,95 @@ const NovelDetails = () => {
             </button>
           )}
 
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">Add a Comment</h2>
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="w-full p-2 border rounded mb-4"
-              placeholder="Write your comment here..."
-            />
-            <button
-              onClick={handlePostComment}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Post Comment
-            </button>
-          </div>
 
           <div className="mt-8">
             <h2 className="text-xl font-semibold mb-4">Comments</h2>
             {comments && comments.length > 0 ? (
-              comments.map((comment, index) => (
+              comments.map((comment, index) => (  // Sử dụng slice để không thay đổi mảng gốc
                 <div key={`${comment.commentID}-${index}`} className="mb-4 border-b pb-4">
-                  <p>
-                    <strong>{comment.userName || "Anonymous"}</strong>:{" "}
-                    {comment.content}
-                  </p>
-                  <small className="text-gray-500">
-                    {new Date(comment.createdDate).toLocaleString()}
-                  </small>
-                  <button
-                    onClick={() => handleDeleteComment(comment.commentID)}
-                    className="text-red-500 mt-2"
-                  >
-                    Delete
-                  </button>
+                  {isEditing === comment.commentID ? (
+                    <div>
+                      <textarea
+                        value={newContent}
+                        onChange={(e) => setNewContent(e.target.value)}
+                        className="w-full p-2 border"
+                      />
+                      <button
+                        onClick={() => handleSaveEdit(comment.commentID)}
+                        className="bg-blue-500 text-white p-2 mt-2"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="bg-gray-500 text-white p-2 mt-2 ml-2"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="contain-comment">
+
+                    {/* Content */}
+                      <div>
+                        <p>
+                          <strong>{comment.userName || "Anonymous"}</strong>: {comment.content}
+                        </p>
+                        <small className="text-gray-500">
+                          {new Date(comment.createdDate).toLocaleString()}
+                        </small>
+                      </div>
+
+                    {/* Delete va Edit */}
+                      <div>
+                        {user?.userId === comment.userId && (
+                          <div className="dropdown-container">
+                            <button onClick={() => handleToggleDropdown(comment.commentID)} className="dropdown-toggle">
+                              <Ellipsis className="h-6 w-6" />
+                            </button>
+                            {dropdownVisibility === comment.commentID && (
+                              <div className="dropdown-menu">
+                                <button
+                                  onClick={() => handleEditComment(comment.commentID, comment.content)}
+                                  className="dropdown-item edit-button"
+                                >
+                                  <PenLine />  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteComment(comment.commentID)}
+                                  className="dropdown-item delete-button"
+                                >
+                                  <Trash /> Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
+
               <p>No comments yet.</p>
             )}
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold mb-4">Add a Comment</h2>
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="w-full p-2 border rounded mb-4"
+                placeholder="Write your comment here..."
+              />
+              <button
+                onClick={handlePostComment}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Post Comment
+              </button>
+            </div>
           </div>
         </div>
       </div>
