@@ -1,35 +1,72 @@
-.dropdown-comment button {
-    color: inherit; /* Sử dụng màu được khai báo riêng cho từng nút */
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    width: 100%;
-    text-align: left;
-    transition: background-color 0.2s ease, color 0.2s ease; /* Hiệu ứng mượt khi đổi màu */
-  }
-  
-  /* Hover cho tất cả nút */
-  .dropdown-comment button:hover {
-    background-color: #f5f5f5; /* Màu nền khi hover */
-  }
-  
-  /* Riêng nút Edit */
-  .edit-button {
-    color: blue; /* Màu chữ bình thường */
-  }
-  
-  .edit-button:hover {
-    color: darkblue; /* Màu chữ khi hover */
-  }
-  
-  /* Riêng nút Delete */
-  .delete-button {
-    color: red; /* Màu chữ bình thường */
-    margin-top: 0.5rem;
-  }
-  
-  .delete-button:hover {
-    color: darkred; /* Màu chữ khi hover */
-  }
-  
+/* Dropdown container */
+.contain-comment{
+  display: flex;
+  justify-content: space-between;
+}
+
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown toggle button */
+.dropdown-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.dropdown-toggle:hover {
+  color: #007bff; /* Màu xanh lam khi hover */
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+  display: block;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #ffffff;
+  min-width: 150px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  z-index: 1000;
+  padding: 0;
+}
+
+.dropdown-item svg {
+  margin-right: 0.5rem; /* Khoảng cách giữa icon và chữ */
+}
+
+/* Dropdown item */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s;
+  color: #333;
+}
+
+.dropdown-item:hover {
+  background-color: #a5a7a8;
+}
+
+.edit-button {
+  color: blue;
+}
+
+.delete-button {
+  color: red;
+}

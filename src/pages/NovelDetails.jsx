@@ -4,6 +4,8 @@ import { FaArrowLeft, FaHeart, FaRegHeart } from "react-icons/fa"; // Import cá
 import { useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { Trash } from 'lucide-react';
+import { Ellipsis } from 'lucide-react';
+import { PenLine } from 'lucide-react';
 import '../styles/comment-dropdown.css';
 
 const NovelDetails = () => {
@@ -18,7 +20,7 @@ const NovelDetails = () => {
   const [newComment, setNewComment] = useState(""); // Thêm state cho comment mới
   const [isEditing, setIsEditing] = useState(null); // Dùng để theo dõi comment nào đang được sửa
   const [newContent, setNewContent] = useState(""); // Dùng để lưu nội dung mới của comment
-  const [dropdownVisibility, setDropdownVisibility] = useState(null); 
+  const [dropdownVisibility, setDropdownVisibility] = useState(null);
 
 
   useEffect(() => {
@@ -279,7 +281,7 @@ const NovelDetails = () => {
           </button>
 
           {/* Thông tin Novel */}
-          
+
           <h1 className="text-3xl font-bold mb-4">{novel.title}</h1>
           <p className="text-lg text-gray-700 mb-2">Author: {novel.author}</p>
           <p className="text-gray-600 mb-4">{novel.description}</p>
@@ -333,7 +335,7 @@ const NovelDetails = () => {
             </ul>
           </div>
 
-         
+
 
           {isFavorite ? (
             <button
@@ -378,38 +380,45 @@ const NovelDetails = () => {
                       </button>
                     </div>
                   ) : (
-                    <div>
-                      <p>
-                        <strong>{comment.userName || "Anonymous"}</strong>: {comment.content}
-                      </p>
-                      <small className="text-gray-500">
-                        {new Date(comment.createdDate).toLocaleString()}
-                      </small>
+                    <div className="contain-comment">
 
-                      {user?.userId === comment.userId && (
-                        <div  className="dropdown-container">
-                          <button onClick={() => handleToggleDropdown(comment.commentID)} className="more-button">
-                            More
-                          </button>
-                          {dropdownVisibility === comment.commentID && (
-                            <div className="dropdown-comment">
-                            <button 
-                              onClick={() => handleEditComment(comment.commentID, comment.content)} 
-                              className="edit-button"
-                            >
-                              Edit
+                      {/* Phan hien content */}
+                      <div>
+                        <p>
+                          <strong>{comment.userName || "Anonymous"}</strong>: {comment.content}
+                        </p>
+                        <small className="text-gray-500">
+                          {new Date(comment.createdDate).toLocaleString()}
+                        </small>
+                      </div>
+
+                      {/* Phan edit voi delete */}
+                      <div>
+                        {user?.userId === comment.userId && (
+                          <div className="dropdown-container">
+                            <button onClick={() => handleToggleDropdown(comment.commentID)} className="dropdown-toggle">
+                              <Ellipsis className="h-6 w-6" />
                             </button>
-                            <button 
-                              onClick={() => handleDeleteComment(comment.commentID)} 
-                              className="delete-button"
-                            >
-                              Delete
-                            </button>
+                            {dropdownVisibility === comment.commentID && (
+                              <div className="dropdown-menu">
+                                <button
+                                  onClick={() => handleEditComment(comment.commentID, comment.content)}
+                                  className="dropdown-item edit-button"
+                                >
+                                  <PenLine />  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteComment(comment.commentID)}
+                                  className="dropdown-item delete-button"
+                                >
+                                  <Trash /> Delete
+                                </button>
+                              </div>
+                            )}
                           </div>
-                          
-                          )}
-                        </div>
-                      )}
+                        )}
+                      </div>
+
                     </div>
                   )}
                 </div>
