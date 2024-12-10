@@ -170,7 +170,7 @@ const NovelDetails = () => {
 
   // Hàm quay lại trang profile
   const handleBack = () => {
-    navigate(-1);
+    navigate("/novels");
   };
 
   if (loading) {
