@@ -1,105 +1,139 @@
 /* Định dạng container chứa tất cả các novel */
 .novel-container {
-    display: flex;
-    flex-wrap: wrap;              /* Cho phép phần tử xuống dòng khi không đủ không gian */
-    flex-direction: column;
-    margin-top: 70px;
+  display: flex;
+  flex-wrap: wrap;
+  /* Cho phép phần tử xuống dòng khi không đủ không gian */
+  flex-direction: column;
+  margin-top: 70px;
 
 }
+
 h1 {
-    text-align: center;
-    font-weight: 600;
-    font-size: 2.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 2.5rem;
 }
-.novel-box{
-    display: flex;
-  flex-wrap: wrap;              /* Cho phép phần tử xuống dòng khi không đủ không gian */
-  justify-content: space-evenly; /* Giãn cách đều các item trong container */
-  gap: 20px;                    /* Khoảng cách giữa các item */
-  padding: 20px;  
-} 
+
+.novel-box {
+  display: flex;
+  flex-wrap: wrap;
+  /* Cho phép phần tử xuống dòng khi không đủ không gian */
+  justify-content: space-evenly;
+  /* Giãn cách đều các item trong container */
+  gap: 20px;
+  /* Khoảng cách giữa các item */
+  padding: 20px;
+}
+
 .search-input {
   margin-left: 1300px;
   margin-bottom: 20px;
-    display: block;
-    max-width: 300px;
-    margin: 0 0 30px auto;
-    padding: 12px 20px;
-    font-size: 16px;
-    border: 2px solid #ddd;
-    border-radius: 25px;
-    transition: all 0.3s ease;
-    outline: none;
-  
+  display: block;
+  max-width: 300px;
+  margin: 0 0 30px auto;
+  padding: 12px 20px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  outline: none;
+
 }
-  /* Định dạng từng item (novel) */
-  .novel-item {
-    background-color: #fff;       /* Màu nền trắng */
-    border: 1px solid #ccc;       /* Viền mỏng */
-    border-radius: 10px;          /* Bo góc nhẹ */
-    padding: 20px;                /* Padding cho mỗi novel item */
-    width: 23%;                   /* Chiều rộng mỗi item là 23% */
-    box-sizing: border-box;       /* Đảm bảo padding không làm thay đổi chiều rộng tổng thể */
-    text-align: center;           /* Canh giữa nội dung bên trong */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hiệu ứng bóng mờ */
-    transition: transform 0.3s, box-shadow 0.3s; /* Hiệu ứng hover */
- 
-  }
-  
-  /* Hiệu ứng hover cho mỗi novel */
-  .novel-item:hover {
-    transform: translateY(-5px);  /* Đẩy lên một chút khi hover */
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Hiệu ứng bóng đổ đậm hơn */
-  }
-  
-  /* Định dạng cho tiêu đề của từng novel */
-  .novel-item h3 {
-    font-size: 1.2rem;  /* Kích thước chữ của tiêu đề */
-    margin-bottom: 10px; /* Khoảng cách dưới tiêu đề */
-    color: #333;        /* Màu chữ tiêu đề */
-  }
-  
-  /* Định dạng cho phần mô tả của novel */
-  .novel-item p {
-    font-size: 1rem;    /* Kích thước chữ mô tả */
-    color: #666;        /* Màu chữ mô tả */
-    margin-bottom: 10px; /* Khoảng cách dưới mô tả */
-  }
-  
-  /* Định dạng cho phần Category và Author */
-  .novel-item p strong {
-    font-weight: bold;   /* Làm đậm chữ cho các phần "Category" và "Author" */
-    color: #333;         /* Màu chữ đậm */
-  }
-  
-  /* Định dạng cho button View Details */
-  .novel-item button {
-    background-color: #3498db;  /* Màu nền xanh lá */
-    color: white;               /* Màu chữ trắng */
-    border: none;               /* Bỏ viền */
-    padding: 10px 20px;         /* Padding cho button */
-    cursor: pointer;           /* Con trỏ chuột khi hover */
-    border-radius: 5px;         /* Bo góc nhẹ cho button */
-    transition: background-color 0.3s; /* Hiệu ứng đổi màu nền */
-  }
-  
-  /* Hiệu ứng hover cho button */
-  .novel-item button:hover {
-    background-color: #105a8b; /* Màu nền button khi hover */
-  }
-  .view-details-button {
-    margin-top: 10px;
-    padding: 8px 12px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .view-details-button:hover {
-    background-color: #2980b9;
-  }
-  
-  
+
+/* Định dạng từng item (novel) */
+.novel-item {
+  background-color: #fff;
+  /* Màu nền trắng */
+  border: 1px solid #ccc;
+  /* Viền mỏng */
+  border-radius: 10px;
+  /* Bo góc nhẹ */
+  padding: 20px;
+  /* Padding cho mỗi novel item */
+  width: 18%;
+  /* Chiều rộng mỗi item là 23% */
+  box-sizing: border-box;
+  /* Đảm bảo padding không làm thay đổi chiều rộng tổng thể */
+  text-align: center;
+  /* Canh giữa nội dung bên trong */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /* Hiệu ứng bóng mờ */
+  transition: transform 0.3s, box-shadow 0.3s;
+  /* Hiệu ứng hover */
+
+}
+
+/* Hiệu ứng hover cho mỗi novel */
+.novel-item:hover {
+  transform: translateY(-5px);
+  /* Đẩy lên một chút khi hover */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  /* Hiệu ứng bóng đổ đậm hơn */
+}
+
+/* Định dạng cho tiêu đề của từng novel */
+.novel-item h3 {
+  font-size: 1.2rem;
+  /* Kích thước chữ của tiêu đề */
+  margin-bottom: 10px;
+  /* Khoảng cách dưới tiêu đề */
+  color: #333;
+  /* Màu chữ tiêu đề */
+}
+
+/* Định dạng cho phần mô tả của novel */
+.novel-item p {
+  font-size: 1rem;
+  /* Kích thước chữ mô tả */
+  color: #666;
+  /* Màu chữ mô tả */
+  margin-bottom: 10px;
+  /* Khoảng cách dưới mô tả */
+}
+
+/* Định dạng cho phần Category và Author */
+.novel-item p strong {
+  font-weight: bold;
+  /* Làm đậm chữ cho các phần "Category" và "Author" */
+  color: #333;
+  /* Màu chữ đậm */
+}
+
+/* Định dạng cho button View Details */
+.novel-item button {
+  background-color: #3498db;
+  /* Màu nền xanh lá */
+  color: white;
+  /* Màu chữ trắng */
+  border: none;
+  /* Bỏ viền */
+  padding: 10px 20px;
+  /* Padding cho button */
+  cursor: pointer;
+  /* Con trỏ chuột khi hover */
+  border-radius: 5px;
+  /* Bo góc nhẹ cho button */
+  transition: background-color 0.3s;
+  /* Hiệu ứng đổi màu nền */
+}
+
+/* Hiệu ứng hover cho button */
+.novel-item button:hover {
+  background-color: #105a8b;
+  /* Màu nền button khi hover */
+}
+
+.view-details-button {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.view-details-button:hover {
+  background-color: #2980b9;
+}
