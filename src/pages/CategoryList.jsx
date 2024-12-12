@@ -55,7 +55,7 @@ const CategoryPage = () => {
                 alt={category.name}
                 style={{
                   width: "300px",
-                  height: "350px",
+                  height: "300px",
                   marginRight: "15px", // Khoảng cách giữa ảnh và nội dung
                 }}
               />

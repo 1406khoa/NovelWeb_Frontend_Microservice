@@ -312,16 +312,13 @@ const NovelDetails = () => {
                               payload,
                               { headers }
                             );
-
-                            // Chuyển hướng đến trang chi tiết chapter
-                            navigate(`/chapter/${chapter.chapterID}`);
                           } catch (error) {
                             console.error("Failed to save history:", error);
                             alert("Error saving history. Please try again.");
                           }
-                        } else {
-                          alert("You need to log in to view this chapter.");
                         }
+                        // Chuyển hướng đến trang chi tiết chapter
+                        navigate(`/chapter/${chapter.chapterID}`);
                       }}
                       className="text-blue-600 hover:underline"
                     >
@@ -382,7 +379,7 @@ const NovelDetails = () => {
                   ) : (
                     <div className="contain-comment">
 
-                    {/* Content */}
+                      {/* Content */}
                       <div>
                         <p>
                           <strong>{comment.userName || "Anonymous"}</strong>: {comment.content}
@@ -392,7 +389,7 @@ const NovelDetails = () => {
                         </small>
                       </div>
 
-                    {/* Delete va Edit */}
+                      {/* Delete va Edit */}
                       <div>
                         {user?.userId === comment.userId && (
                           <div className="dropdown-container">
